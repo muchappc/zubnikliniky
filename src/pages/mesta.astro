@@ -1,0 +1,27 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import { getCities } from '../lib/data';
+const cities = await getCities();
+const byLetter = new Map<string, typeof cities>();
+for (const c of [...cities].sort((a, b) => a.name.localeCompare(b.name, 'cs'))) {
+  const l = c.name[0].toUpperCase();
+  byLetter.set(l, [...(byLetter.get(l) ?? []), c]);
+}
+---
+<Layout title="Zubaři podle měst – Moravskoslezský kraj" description={`Zubní ordinace a dentální hygiena v ${cities.length} městech a obcích Moravskoslezského kraje.`}>
+  <Breadcrumbs items={[{ name: 'Města' }]} />
+  <section class="section" style="padding-top:20px">
+    <div class="wrap">
+      <h1>Zubaři podle měst</h1>
+      <p class="lead">Moravskoslezský kraj – {cities.length} měst a obcí s alespoň jednou zubní ordinací.</p>
+      {[...byLetter].map(([l, list]) => (
+        <div class="letter">
+          <h2>{l}</h2>
+          <ul class="places">{list.map((c) => <li><a href={`/mesto/${c.slug}`}>{c.name}<span class="n">{c.count}</span></a></li>)}</ul>
+        </div>
+      ))}
+    </div>
+  </section>
+</Layout>
+<style>.letter { margin-top: 28px; } .letter h2 { font-size: 1.2rem; color: var(--brand); margin-bottom: 4px; }</style>

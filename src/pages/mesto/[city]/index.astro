@@ -1,0 +1,54 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import Breadcrumbs from '../../../components/Breadcrumbs.astro';
+import ClinicList from '../../../components/ClinicList.astro';
+import { getCities, getParts, type Place } from '../../../lib/data';
+import { CATEGORIES, locative, plural } from '../../../lib/taxonomy.mjs';
+import { summary } from '../../../lib/text';
+
+export async function getStaticPaths() {
+  const cities = await getCities();
+  return Promise.all(cities.map(async (city) => ({ params: { city: city.slug }, props: { city, parts: await getParts(city.slug), others: cities.filter((c) => c.slug !== city.slug).slice(0, 12) } })));
+}
+const { city, parts, others } = Astro.props as { city: Place; parts: Place[]; others: Place[] };
+const loc = locative(city.name);
+const catLinks = CATEGORIES.map((c) => ({ ...c, n: city.clinics.filter((x) => x.categories.includes(c.slug)).length })).filter((c) => c.n >= 2 && c.slug !== 'zubar');
+---
+<Layout
+  title={`Zubaři ${city.name} – kdo bere nové pacienty`}
+  description={`${city.count} ${plural(city.count, 'zubní ordinace', 'zubní ordinace', 'zubních ordinací')}, klinik a dentálních hygien ${loc}. Zjistěte, kdo bere nové pacienty a na jaké pojišťovny, a přečtěte si recenze.`}>
+  <Breadcrumbs items={[{ name: 'Města', href: '/mesta' }, { name: city.name }]} />
+  <section class="section" style="padding-top:20px">
+    <div class="wrap">
+      <h1>Zubaři {loc}</h1>
+      <p class="lead">{summary(city.clinics, loc)}</p>
+      {parts.length > 1 && (
+        <nav aria-label="Části města" class="subnav">
+          <span class="muted small">Části města:</span>
+          {parts.map((p) => <a href={`/mesto/${city.slug}/${p.slug}`}>{p.name} <span class="muted">({p.count})</span></a>)}
+        </nav>
+      )}
+      {catLinks.length > 0 && (
+        <nav aria-label="Obory" class="subnav">
+          <span class="muted small">Obory:</span>
+          {catLinks.map((c) => <a href={`/obor/${c.slug}/${city.slug}`}>{c.name} <span class="muted">({c.n})</span></a>)}
+        </nav>
+      )}
+      <ClinicList clinics={city.clinics} parts={parts} />
+    </div>
+  </section>
+  {others.length > 0 && (
+    <section class="section">
+      <div class="wrap">
+        <h2>Další města</h2>
+        <ul class="places">{others.map((c) => <li><a href={`/mesto/${c.slug}`}>{c.name}<span class="n">{c.count}</span></a></li>)}</ul>
+        <p style="margin-top:16px"><a href="/mesta">Všechna města a obce</a></p>
+      </div>
+    </section>
+  )}
+</Layout>
+<style>
+  .subnav { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: baseline; margin: 0 0 12px; font-size: 0.95rem; }
+  .subnav a { text-decoration: none; font-weight: 550; }
+  .subnav a:hover { text-decoration: underline; }
+</style>

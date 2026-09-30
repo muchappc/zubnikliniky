@@ -1,0 +1,34 @@
+---
+import Page from '../components/Page.astro';
+import { SITE } from '../lib/site';
+---
+<Page title="Jak zubnikliniky.cz funguje" description="Odkud bereme údaje o zubních ordinacích, jak ověřujeme příjem nových pacientů, jak řadíme výsledky a jak fungují recenze." crumb="Jak to funguje">
+  <h1>Jak zubnikliniky.cz funguje</h1>
+  <p class="lead">Najít v Moravskoslezském kraji zubaře, který bere nové pacienty, je těžké. Tento web vznikl z facebookové skupiny {SITE.fbGroup}, kde se na to lidé ptají každý den.</p>
+
+  <h2>Odkud jsou údaje</h2>
+  <p>Seznam ordinací, adresy a obory péče přebíráme z Národního registru poskytovatelů zdravotních služeb (NRPZS), který vede Ústav zdravotnických informací a statistiky ČR. Díky tomu v přehledu najdete i ordinace, které nemají vlastní web.</p>
+  <p>Registr neobsahuje, jestli ordinace bere nové pacienty, se kterými pojišťovnami má smlouvu ani ordinační hodiny. Tyto údaje doplňujeme ručně – od samotných ordinací, od pacientů a z komunity. U stavu přijímání pacientů vždy uvádíme datum, kdy jsme ho naposledy ověřili. Situace se mění rychle, proto si před návštěvou vše potvrďte přímo v ordinaci.</p>
+
+  <h2>Jak řadíme ordinace</h2>
+  <ul>
+    <li>Nahoře jsou ordinace, které podle posledních informací berou nové pacienty, potom ty, které je berou omezeně, pak neověřené a nakonec ty, které nové pacienty neberou.</li>
+    <li>Uvnitř těchto skupin rozhoduje průměrné hodnocení pacientů, potom abeceda.</li>
+    <li>Pořadí si nelze koupit. Ordinace s prémiovým profilem jsou jen vizuálně odlišené a označené štítkem „Prémiový profil“.</li>
+  </ul>
+
+  <h2>Jak fungují recenze</h2>
+  <ul>
+    <li>Recenzi může napsat kdokoli, kdo byl v ordinaci sám nebo se svým dítětem.</li>
+    <li>Každou recenzi je potřeba potvrdit odkazem z e-mailu. E-mailovou adresu nikde nezobrazujeme.</li>
+    <li>Z jedné e-mailové adresy lze přidat nejvýše 3 recenze za 24 hodin.</li>
+    <li>Recenze nemažeme proto, že je negativní. Skryjeme ji, pokud je urážlivá, obsahuje osobní údaje, zdravotní informace o jiných lidech, reklamu, nebo pokud je zjevně podvodná. Každou recenzi můžete nahlásit.</li>
+    <li>Ordinace může na recenzi veřejně odpovědět.</li>
+  </ul>
+
+  <h2>Poptávky termínů</h2>
+  <p>U každé ordinace můžete poslat poptávku termínu. U ordinací s prémiovým profilem ji pošleme rovnou do jejich e-mailu. U ostatních ji ordinaci předáme my a dáme vám vědět, jak odpověděla. Nemůžeme zaručit, že vás ordinace přijme – rozhoduje vždy ona sama.</p>
+
+  <h2>Kdo za webem stojí</h2>
+  <p>Web provozuje {SITE.operator}, správce facebookové skupiny {SITE.fbGroup}. Kontakt najdete na stránce <a href="/kontakt">Kontakt</a>.</p>
+</Page>

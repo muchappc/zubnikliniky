@@ -1,0 +1,65 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getCities, getCategoryCounts } from '../lib/data';
+import { INSURERS } from '../lib/taxonomy.mjs';
+const cities = await getCities();
+const cats = await getCategoryCounts();
+---
+<Layout title="Hledat zubaře" description="Vyhledávání zubních ordinací v Moravskoslezském kraji." noindex>
+  <section class="section">
+    <div class="wrap">
+      <h1>Hledat zubaře</h1>
+      <form id="sf" class="filters" role="search" onsubmit="return false" style="position:static">
+        <input name="q" type="search" placeholder="Jméno lékaře, ordinace nebo ulice" aria-label="Hledaný text" style="flex:1 1 260px;border-radius:999px;padding:8px 14px" />
+        <select name="mesto" aria-label="Město"><option value="">Celý kraj</option>{cities.map((c) => <option value={c.slug}>{c.name}</option>)}</select>
+        <select name="obor" aria-label="Obor"><option value="">Všechny obory</option>{cats.map((c) => <option value={c.slug}>{c.name}</option>)}</select>
+        <select name="pojistovna" aria-label="Pojišťovna"><option value="">Jakákoli pojišťovna</option>{INSURERS.map((i) => <option value={i.code}>{i.short} ({i.code})</option>)}</select>
+        <label class="toggle"><input type="checkbox" name="nove" value="1" /> Jen ty, co berou nové pacienty</label>
+      </form>
+      <p class="muted" id="count" aria-live="polite">Načítám…</p>
+      <ul class="list" id="results"></ul>
+    </div>
+  </section>
+</Layout>
+<script>
+  import { CATEGORY_BY_SLUG, INSURER_BY_CODE, NEW_PATIENTS } from '../lib/taxonomy.mjs';
+  const form = document.getElementById('sf') as HTMLFormElement;
+  const out = document.getElementById('results')!;
+  const count = document.getElementById('count')!;
+  const esc = (s: string) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
+  const fold = (s: string) => String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  const params = new URLSearchParams(location.search);
+  for (const el of form.elements as any) {
+    if (!el.name || !params.has(el.name)) continue;
+    if (el.type === 'checkbox') el.checked = true; else el.value = params.get(el.name);
+  }
+  (async () => {
+  const rows: any[] = await fetch('/index.json').then((r) => r.json());
+  const hay = rows.map((r) => fold([r[1], r[12], r[2], r[3], r[5]].join(' ')));
+  const tone: Record<string, string> = { ano: 'yes', omezene: 'limited', ne: 'no' };
+  const render = () => {
+    const f = new FormData(form);
+    const q = fold(String(f.get('q') || '')).split(/\s+/).filter(Boolean);
+    const mesto = f.get('mesto'), obor = String(f.get('obor') || ''), poj = String(f.get('pojistovna') || ''), nove = f.get('nove');
+    const hits = rows.filter((r, i) =>
+      q.every((w) => hay[i].includes(w)) && (!mesto || r[4] === mesto) && (!obor || r[6].split(' ').includes(obor)) &&
+      (!poj || r[7].split(' ').includes(poj)) && (!nove || r[8] === 'ano' || r[8] === 'omezene'));
+    count.textContent = hits.length ? `Nalezeno: ${hits.length}` : 'Nic jsme nenašli. Zkuste uvolnit filtry nebo hledat jen část jména.';
+    out.innerHTML = hits.slice(0, 200).map((r) => `
+      <li class="row" data-premium="${!!r[9]}"><a href="/zubar/${r[0]}"><div>
+        <div class="row-name">${esc(r[1])}</div>
+        <div class="row-meta"><span>${esc(r[2])}, ${esc(r[5] && r[5] !== r[3] ? r[3] + ' – ' + r[5] : r[3])}</span></div>
+        <div class="row-tags">${r[6].split(' ').filter(Boolean).slice(0, 4).map((s: string) => `<span class="tag">${esc(CATEGORY_BY_SLUG[s]?.short ?? s)}</span>`).join('')}${r[9] ? '<span class="tag tag-premium">Prémiový profil</span>' : ''}</div>
+      </div><div class="row-side">
+        <span class="status" data-tone="${tone[r[8]] ?? 'unknown'}">${r[8] ? (NEW_PATIENTS as any)[r[8]].label : 'Příjem pacientů neověřen'}</span>
+        ${r[7] ? `<span class="small muted">${r[7].split(' ').length === 7 ? 'Všechny pojišťovny' : r[7].split(' ').map((c: string) => INSURER_BY_CODE[c]?.short ?? c).join(', ')}</span>` : ''}
+        ${r[11] ? `<span class="small"><span class="stars">★</span> ${String(r[10].toFixed(1)).replace('.', ',')} <span class="muted">(${r[11]})</span></span>` : ''}
+      </div></a></li>`).join('');
+    const u = new URLSearchParams();
+    f.forEach((v, k) => { if (v) u.set(k, String(v)); });
+    history.replaceState(null, '', u.toString() ? `?${u}` : location.pathname);
+  };
+  form.addEventListener('input', render);
+  render();
+  })();
+</script>

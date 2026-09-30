@@ -1,0 +1,314 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import StatusPill from '../../components/StatusPill.astro';
+import ClinicRow from '../../components/ClinicRow.astro';
+import ApiForms from '../../components/ApiForms.astro';
+import Honeypot from '../../components/Honeypot.astro';
+import { getClinics, getReviews, getNearby, type Clinic } from '../../lib/data';
+import { CATEGORY_BY_SLUG, INSURERS, INSURER_BY_CODE, locative, plural } from '../../lib/taxonomy.mjs';
+import { SITE } from '../../lib/site';
+
+export async function getStaticPaths() {
+  return (await getClinics()).map((c) => ({ params: { slug: c.slug }, props: { c } }));
+}
+const { c } = Astro.props as { c: Clinic };
+const reviews = await getReviews(c.id);
+const nearby = await getNearby(c, 5);
+const mainCat = CATEGORY_BY_SLUG[c.categories[0]];
+const address = `${c.street}, ${c.zip} ${c.city}`;
+const place = c.city_part && c.city_part !== c.city ? `${c.city} – ${c.city_part}` : c.city;
+const mapQuery = encodeURIComponent(`${c.display_name}, ${address}`);
+const mapyUrl = c.lat != null ? `https://mapy.cz/zakladni?q=${mapQuery}&x=${c.lng}&y=${c.lat}&z=17` : `https://mapy.cz/zakladni?q=${mapQuery}`;
+const fmtDate = (d: string) => new Date(d).toLocaleDateString('cs-CZ', { day: 'numeric', month: 'long', year: 'numeric' });
+const allInsurers = c.insurers.length === INSURERS.length;
+
+const crumbs = [{ name: c.city, href: `/mesto/${c.city_slug}` }];
+if (c.city_part && c.part_slug) crumbs.push({ name: c.city_part, href: `/mesto/${c.city_slug}/${c.part_slug}` });
+crumbs.push({ name: c.display_name } as any);
+
+const ld: any = {
+  '@context': 'https://schema.org',
+  '@type': c.categories.includes('zubar') || c.categories.includes('ortodoncie') ? 'Dentist' : 'MedicalBusiness',
+  name: c.display_name,
+  legalName: c.legal_name !== c.display_name ? c.legal_name : undefined,
+  url: new URL(`/zubar/${c.slug}`, SITE.url).toString(),
+  address: { '@type': 'PostalAddress', streetAddress: c.street, postalCode: c.zip, addressLocality: c.city, addressRegion: c.kraj, addressCountry: 'CZ' },
+  ...(c.lat != null ? { geo: { '@type': 'GeoCoordinates', latitude: c.lat, longitude: c.lng } } : {}),
+  ...(c.phone ? { telephone: c.phone } : {}),
+  ...(c.web ? { sameAs: [c.web] } : {}),
+  ...(c.photos[0] ? { image: c.photos[0] } : {}),
+  medicalSpecialty: 'Dentistry',
+  ...(c.rating_count > 0 ? { aggregateRating: { '@type': 'AggregateRating', ratingValue: c.rating_avg, reviewCount: c.rating_count, bestRating: 5, worstRating: 1 } } : {}),
+  ...(reviews.length ? { review: reviews.slice(0, 5).map((r) => ({ '@type': 'Review', author: { '@type': 'Person', name: r.author_name }, datePublished: r.created_at.slice(0, 10), reviewBody: r.text, reviewRating: { '@type': 'Rating', ratingValue: r.rating, bestRating: 5 } })) } : {}),
+};
+const desc = `${c.display_name} – ${mainCat?.name.toLowerCase() ?? 'zubní ordinace'} ${locative(c.city_part || c.city)}, ${c.street}. ${c.accepts_new === 'ano' ? 'Bere nové pacienty. ' : ''}Kontakt, pojišťovny a recenze pacientů.`;
+---
+<Layout title={`${c.display_name} – ${mainCat?.name ?? 'Zubní ordinace'} ${c.city}`} description={desc} jsonLd={[ld]} ogType="profile" image={c.photos[0]}>
+  <Breadcrumbs items={crumbs} />
+
+  <section class="section detail" style="padding-top:20px" data-clinic-id={c.id}>
+    <div class="wrap">
+      <header class="d-head">
+        <div class="row-tags">
+          {c.categories.map((s) => <a class="tag" href={`/obor/${s}`}>{CATEGORY_BY_SLUG[s]?.name ?? s}</a>)}
+          {c.is_clinic && <span class="tag">Klinika</span>}
+          {c.premium && <span class="tag tag-premium" title="Ordinace si u nás platí rozšířený profil. Na pořadí ve výpisech to nemá vliv.">Prémiový profil</span>}
+        </div>
+        <h1>{c.display_name}</h1>
+        <p class="muted">
+          {address}
+          {c.rating_count > 0 && <> · <a href="#recenze"><span class="stars" aria-hidden="true">★</span> {c.rating_avg!.toFixed(1).replace('.', ',')} ({c.rating_count} {plural(c.rating_count, 'recenze', 'recenze', 'recenzí')})</a></>}
+        </p>
+        {c.legal_name !== c.display_name && <p class="small muted">Provozovatel: {c.legal_name}</p>}
+      </header>
+
+      <div class="d-grid">
+        <div class="d-status">
+          <section class="avail" data-tone={c.accepts_new ?? 'unknown'} aria-labelledby="avail-h">
+            <h2 id="avail-h" class="visually-hidden">Příjem pacientů a pojišťovny</h2>
+            <div class="avail-top">
+              <StatusPill value={c.accepts_new} checkedAt={c.accepts_new_checked_at} long />
+            </div>
+            <div class="ins">
+              <p class="small" style="margin-bottom:8px"><strong>Smluvní pojišťovny</strong></p>
+              {c.insurers.length > 0 ? (
+                <ul class="ins-list">
+                  {INSURERS.map((i) => (
+                    <li data-on={String(c.insurers.includes(i.code))} title={i.name}>
+                      <span aria-hidden="true">{c.insurers.includes(i.code) ? '✓' : '–'}</span> {i.short} <span class="muted">{i.code}</span>
+                      <span class="visually-hidden">{c.insurers.includes(i.code) ? 'ano' : 'ne'}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p class="small muted" style="margin:0">Zatím neověřeno. Na smluvní pojišťovny se ordinace zeptejte při objednání.</p>
+              )}
+            </div>
+            <details class="report">
+              <summary>Údaje nesedí? Dejte nám vědět</summary>
+              <form data-api="/api/report" data-ok="Díky, údaje prověříme a opravíme.">
+                <input type="hidden" name="kind" value="data" />
+                <input type="hidden" name="clinic_id" value={c.id} />
+                <Honeypot />
+                <div class="field">
+                  <label for="rep-msg">Co je potřeba opravit?</label>
+                  <textarea id="rep-msg" name="message" required minlength="5" placeholder="Např. od září už nové pacienty nebere, přestěhovali se, jiný telefon…"></textarea>
+                </div>
+                <div class="field">
+                  <label for="rep-mail">Váš e-mail (nepovinné, pro případný dotaz)</label>
+                  <input id="rep-mail" name="email" type="email" autocomplete="email" />
+                </div>
+                <button class="btn btn-ghost" type="submit">Odeslat opravu</button>
+              </form>
+            </details>
+          </section>
+        </div>
+        <div class="d-main">
+          {c.premium && c.description && (
+            <section class="block">
+              <h2>O ordinaci</h2>
+              {c.description.split(/\n{2,}/).map((p) => <p>{p}</p>)}
+            </section>
+          )}
+
+          {c.premium && c.photos.length > 0 && (
+            <section class="block">
+              <h2 class="visually-hidden">Fotografie</h2>
+              <div class="gallery">
+                {c.photos.slice(0, 5).map((src, i) => <img src={src} alt={`${c.display_name} – fotografie ${i + 1}`} loading="lazy" width="480" height="320" />)}
+              </div>
+            </section>
+          )}
+
+          {c.obory_raw && (
+            <section class="block">
+              <h2>Obory podle registru</h2>
+              <p class="muted">{c.obory_raw}</p>
+            </section>
+          )}
+
+          <section class="block" id="poptavka">
+            <h2>Poptat termín</h2>
+            <p class="muted">
+              {c.premium && c.email
+                ? 'Poptávku pošleme přímo ordinaci. Ozve se vám telefonicky nebo e-mailem.'
+                : 'Poptávku předáme ordinaci a dáme vám vědět, jak odpověděla. Pokud spěcháte, zavolejte přímo.'}
+            </p>
+            <form data-api="/api/inquiry" class="panel" data-ok="Hotovo, poptávku jsme přijali. Potvrzení najdete v e-mailu.">
+              <input type="hidden" name="clinic_id" value={c.id} />
+              <Honeypot />
+              <div class="field-row">
+                <div class="field"><label for="iq-name">Jméno a příjmení</label><input id="iq-name" name="name" required autocomplete="name" /></div>
+                <div class="field"><label for="iq-phone">Telefon</label><input id="iq-phone" name="phone" type="tel" required autocomplete="tel" /></div>
+              </div>
+              <div class="field-row">
+                <div class="field"><label for="iq-email">E-mail</label><input id="iq-email" name="email" type="email" required autocomplete="email" /></div>
+                <div class="field">
+                  <label for="iq-ins">Zdravotní pojišťovna</label>
+                  <select id="iq-ins" name="insurer">
+                    <option value="">Nevím / samoplátce</option>
+                    {INSURERS.map((i) => <option value={i.code}>{i.short} ({i.code})</option>)}
+                  </select>
+                </div>
+              </div>
+              <div class="field">
+                <label for="iq-type">Pro koho</label>
+                <select id="iq-type" name="patient_type">
+                  <option value="novy-dospely">Chci se registrovat jako nový pacient (dospělý)</option>
+                  <option value="novy-dite">Chci registrovat dítě</option>
+                  <option value="jednorazove">Jednorázové ošetření / bolest</option>
+                  <option value="hygiena">Dentální hygiena</option>
+                  <option value="jine">Něco jiného</option>
+                </select>
+              </div>
+              <div class="field"><label for="iq-msg">Zpráva (nepovinné)</label><textarea id="iq-msg" name="message" placeholder="Co potřebujete, kdy se vám to hodí…"></textarea></div>
+              <label class="check field"><input type="checkbox" name="consent" required /> <span>Souhlasím s předáním údajů této ordinaci za účelem objednání. <a href="/soukromi">Jak s údaji nakládáme</a></span></label>
+              <button class="btn" type="submit">Odeslat poptávku</button>
+            </form>
+          </section>
+
+          <section class="block" id="recenze">
+            <h2>Recenze pacientů {reviews.length > 0 && <span class="muted">({reviews.length})</span>}</h2>
+            {reviews.length === 0 && <p class="muted">Zatím žádné recenze. Byli jste tu? Pomozte ostatním a napište, jak jste byli spokojeni.</p>}
+            <ul class="reviews">
+              {reviews.map((r) => (
+                <li>
+                  <p class="r-head"><strong>{r.author_name}</strong> <span class="stars" aria-label={`${r.rating} z 5`}>{'★'.repeat(r.rating)}<span style="color:var(--line)">{'★'.repeat(5 - r.rating)}</span></span> <span class="small muted">{fmtDate(r.created_at)}</span></p>
+                  <p>{r.text}</p>
+                  {r.clinic_reply && (
+                    <div class="reply"><p class="small"><strong>Odpověď ordinace</strong>{r.clinic_reply_at && <span class="muted"> · {fmtDate(r.clinic_reply_at)}</span>}</p><p>{r.clinic_reply}</p></div>
+                  )}
+                  <details class="report small">
+                    <summary>Nahlásit recenzi</summary>
+                    <form data-api="/api/report" data-ok="Díky, recenzi posoudíme.">
+                      <input type="hidden" name="kind" value="review" />
+                      <input type="hidden" name="review_id" value={r.id} />
+                      <input type="hidden" name="clinic_id" value={c.id} />
+                      <Honeypot />
+                      <div class="field"><label>Proč recenzi nahlašujete?</label><textarea name="message" required minlength="5"></textarea></div>
+                      <div class="field"><label>Váš e-mail (nepovinné)</label><input name="email" type="email" /></div>
+                      <button class="btn btn-ghost" type="submit">Nahlásit</button>
+                    </form>
+                  </details>
+                </li>
+              ))}
+            </ul>
+
+            <form data-api="/api/review" class="panel review-form" data-ok="Děkujeme! Poslali jsme vám e-mail s odkazem. Recenzi zveřejníme, až na něj kliknete.">
+              <h3>Napište recenzi</h3>
+              <input type="hidden" name="clinic_id" value={c.id} />
+              <Honeypot />
+              <fieldset class="rating field">
+                <legend>Celkové hodnocení</legend>
+                <div class="rating-stars">
+                  {[5, 4, 3, 2, 1].map((n) => (<><input type="radio" id={`rt-${n}`} name="rating" value={n} required /><label for={`rt-${n}`} title={`${n} z 5`}>★<span class="visually-hidden">{n} z 5</span></label></>))}
+                </div>
+              </fieldset>
+              <div class="field"><label for="rv-text">Vaše zkušenost</label><textarea id="rv-text" name="text" required minlength="20" maxlength="3000" placeholder="Jak probíhalo objednání, přístup personálu, ošetření, čekání…"></textarea></div>
+              <div class="field-row">
+                <div class="field"><label for="rv-name">Jméno, které zobrazíme</label><input id="rv-name" name="author_name" required minlength="2" maxlength="60" autocomplete="given-name" placeholder="Např. Petra K." /></div>
+                <div class="field"><label for="rv-email">E-mail (pro ověření, nezobrazíme ho)</label><input id="rv-email" name="email" type="email" required autocomplete="email" /></div>
+              </div>
+              <label class="check field"><input type="checkbox" name="consent" required /> <span>Potvrzuji, že píšu o vlastní zkušenosti s touto ordinací a souhlasím s <a href="/podminky">podmínkami</a>.</span></label>
+              <button class="btn" type="submit">Odeslat recenzi</button>
+            </form>
+          </section>
+        </div>
+
+        <aside class="d-side">
+          <div class="panel contact">
+            <h2 class="h3">Kontakt</h2>
+            <ul>
+              {c.phone && <li><span class="k">Telefon</span><a href={`tel:${c.phone.replace(/\s/g, '')}`} data-track="phone">{c.phone}</a></li>}
+              {c.email && <li><span class="k">E-mail</span><a href={`mailto:${c.email}`} data-track="email">{c.email}</a></li>}
+              {c.web && <li><span class="k">Web</span><a href={c.web} target="_blank" rel={c.premium ? 'noopener' : 'noopener nofollow'} data-track="web">{c.web.replace(/^https?:\/\/(www\.)?/, '')}</a></li>}
+              <li><span class="k">Adresa</span><span>{c.street}<br />{c.zip} {c.city}{c.city_part && c.city_part !== c.city && <><br /><span class="muted small">{c.city_part}</span></>}</span></li>
+            </ul>
+            {!c.phone && !c.email && !c.web && <p class="small muted">Kontakt zatím nemáme. Víte ho? <a href="#" data-open-report>Doplňte ho</a>.</p>}
+            <div class="contact-actions">
+              {c.phone && <a class="btn" href={`tel:${c.phone.replace(/\s/g, '')}`} data-track="phone">Zavolat</a>}
+              <a class="btn btn-ghost" href="#poptavka">Poptat termín</a>
+              <a class="btn btn-ghost" href={mapyUrl} target="_blank" rel="noopener" data-track="map">Mapa</a>
+            </div>
+            {c.opening_hours && (<><h3 class="small" style="margin-top:18px">Ordinační hodiny</h3><pre class="hours">{c.opening_hours}</pre></>)}
+          </div>
+          <p class="small muted owner">Pracujete v této ordinaci? <a href={`/pro-zubare?ordinace=${c.slug}`}>Upravte údaje zdarma</a> nebo odpovězte na recenze.</p>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  {nearby.length > 0 && (
+    <section class="section">
+      <div class="wrap">
+        <h2>{mainCat?.plural ?? 'Ordinace'} v okolí</h2>
+        <ul class="list">{nearby.map(({ clinic, km }) => <ClinicRow c={clinic} km={km} />)}</ul>
+        <p style="margin-top:16px"><a href={`/mesto/${c.city_slug}${c.categories[0] !== 'zubar' ? `?obor=${c.categories[0]}` : ''}`}>Všechny {mainCat?.plural.toLowerCase() ?? 'ordinace'} {locative(c.city)}</a></p>
+      </div>
+    </section>
+  )}
+  <ApiForms />
+</Layout>
+
+<style>
+  .d-head h1 { margin: 12px 0 8px; max-width: 24ch; }
+  .d-head .row-tags a.tag { text-decoration: none; }
+  .d-grid { display: grid; gap: 28px; margin-top: 28px; grid-template-areas: 'status' 'side' 'main'; }
+  .d-status { grid-area: status; } .d-main { grid-area: main; } .d-side { grid-area: side; }
+  .d-main > .block:first-child { margin-top: 12px; }
+  @media (min-width: 960px) {
+    .d-grid { grid-template-columns: minmax(0, 1fr) 340px; grid-template-rows: auto 1fr; grid-template-areas: 'status side' 'main side'; gap: 0 48px; }
+    .d-side { position: sticky; top: 16px; align-self: start; }
+  }
+  .avail { border-radius: var(--radius-m); padding: 20px 22px; border: 1.5px solid var(--line); background: var(--surface); }
+  .avail[data-tone='ano'] { border-color: #9fd6b9; background: linear-gradient(var(--yes-soft), var(--surface) 70%); }
+  .avail[data-tone='omezene'] { border-color: #ecd49a; }
+  .avail[data-tone='ne'] { border-color: #e6b8bd; }
+  .avail .status { font-size: 1rem; padding: 7px 14px 7px 12px; }
+  .ins { margin-top: 16px; }
+  .ins-list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+  .ins-list li { font-size: 0.88rem; padding: 4px 10px; border-radius: 6px; background: var(--line-2); color: var(--ink-3); }
+  .ins-list li[data-on='true'] { background: var(--brand-soft); color: var(--ink); font-weight: 600; }
+  .report { margin-top: 14px; }
+  .report summary { cursor: pointer; color: var(--brand); font-size: 0.92rem; }
+  .report form { margin-top: 12px; }
+  .block { margin-top: 40px; }
+  .gallery { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+  .gallery img { border-radius: var(--radius-s); aspect-ratio: 3/2; object-fit: cover; width: 100%; }
+  .contact h2 { font-size: 1.1rem; }
+  .contact ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+  .contact li { display: grid; gap: 2px; word-break: break-word; }
+  .contact .k { font-size: 0.8rem; color: var(--ink-3); font-weight: 600; }
+  .contact-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+  .contact-actions .btn { padding: 10px 16px; font-size: 0.95rem; }
+  .hours { font-family: inherit; white-space: pre-wrap; margin: 0; font-size: 0.93rem; color: var(--ink-2); }
+  .owner { margin-top: 14px; }
+  .reviews { list-style: none; margin: 0 0 24px; padding: 0; }
+  .reviews > li { border-top: 1px solid var(--line); padding: 16px 0; }
+  .r-head { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; margin-bottom: 6px; }
+  .reply { margin: 8px 0 0 16px; padding-left: 14px; border-left: 3px solid var(--brand-soft); }
+  .review-form h3 { margin-bottom: 14px; }
+  .rating { border: 0; padding: 0; margin: 0 0 16px; }
+  .rating legend { font-weight: 600; font-size: 0.92rem; margin-bottom: 4px; padding: 0; }
+  .rating-stars { display: inline-flex; flex-direction: row-reverse; gap: 2px; }
+  .rating-stars input { position: absolute; opacity: 0; width: 1px; }
+  .rating-stars label { font-size: 2rem; color: var(--line); cursor: pointer; margin: 0; line-height: 1; }
+  .rating-stars input:checked ~ label, .rating-stars label:hover, .rating-stars label:hover ~ label { color: #d99a00; }
+  .rating-stars input:focus-visible + label { outline: 3px solid var(--focus); border-radius: 4px; }
+</style>
+
+<script>
+  const id = document.querySelector<HTMLElement>('[data-clinic-id]')?.dataset.clinicId;
+  const send = (kind: string) => {
+    if (!id || id.startsWith('local-')) return;
+    navigator.sendBeacon?.('/api/track', new Blob([JSON.stringify({ clinic_id: id, kind })], { type: 'application/json' }));
+  };
+  if (!/bot|crawl|spider/i.test(navigator.userAgent)) send('view');
+  document.querySelectorAll<HTMLElement>('[data-track]').forEach((a) => a.addEventListener('click', () => send(a.dataset.track!)));
+  document.querySelector('[data-open-report]')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    const d = document.querySelector<HTMLDetailsElement>('.avail details.report');
+    if (d) { d.open = true; d.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+  });
+</script>

@@ -1,0 +1,453 @@
+---
+import '../../styles/global.css';
+import { CATEGORIES, INSURERS } from '../../lib/taxonomy.mjs';
+const cfg = { url: import.meta.env.PUBLIC_SUPABASE_URL ?? '', key: import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? '' };
+---
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Administrace | zubnikliniky.cz</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div id="cfg" data-url={cfg.url} data-key={cfg.key} data-cats={JSON.stringify(CATEGORIES.map((c) => [c.slug, c.name]))} data-ins={JSON.stringify(INSURERS.map((i) => [i.code, i.short]))} hidden></div>
+  <header class="a-top">
+    <a class="logo" href="/"><b>zubni<span>kliniky</span>.cz</b></a>
+    <nav id="tabs" hidden>
+      <a href="#prehled">Přehled</a><a href="#ordinace">Ordinace</a><a href="#recenze">Recenze</a>
+      <a href="#poptavky">Poptávky</a><a href="#zadosti">Žádosti ordinací</a><a href="#hlaseni">Hlášení</a><a href="#statistiky">Statistiky</a>
+    </nav>
+    <div class="a-user" id="user"></div>
+  </header>
+  <main class="a-main" id="app"><p class="muted">Načítám…</p></main>
+  <div class="toast" id="toast" role="status" hidden></div>
+
+  <style>
+    body { background: var(--paper); }
+    .a-top { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; padding: 12px 20px; background: var(--ink); color: #fff; position: sticky; top: 0; z-index: 10; }
+    .a-top .logo { color: #fff; }
+    .a-top .logo span { color: #7fd1c2; }
+    .a-top nav { display: flex; gap: 4px; flex-wrap: wrap; }
+    .a-top nav a { color: #cfe0e0; text-decoration: none; padding: 6px 12px; border-radius: 999px; font-weight: 550; font-size: 0.95rem; }
+    .a-top nav a.on { background: #fff; color: var(--ink); }
+    .a-user { margin-left: auto; display: flex; gap: 10px; align-items: center; font-size: 0.9rem; }
+    .a-user button { font: inherit; background: none; border: 1px solid #52707a; color: #fff; border-radius: 999px; padding: 5px 12px; cursor: pointer; }
+    .a-main { max-width: 1280px; margin: 0 auto; padding: 24px 20px 80px; }
+    .stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; margin-bottom: 24px; }
+    .stat { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; text-decoration: none; color: inherit; }
+    .stat b { display: block; font-size: 1.7rem; letter-spacing: -0.03em; }
+    .stat span { color: var(--ink-2); font-size: 0.9rem; }
+    table { width: 100%; border-collapse: collapse; background: var(--surface); font-size: 0.93rem; }
+    th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { font-size: 0.82rem; color: var(--ink-2); font-weight: 650; background: var(--paper); position: sticky; top: 56px; }
+    tr:hover td { background: #fbfdfc; }
+    td select, td input { padding: 5px 8px; font-size: 0.9rem; width: auto; }
+    .bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px; }
+    .bar input[type=search] { max-width: 340px; }
+    .bar select { width: auto; }
+    .sbtn { font: inherit; font-size: 0.88rem; padding: 5px 11px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--surface); cursor: pointer; color: var(--ink); }
+    .sbtn:hover { border-color: var(--ink-3); }
+    .sbtn.danger { color: var(--no); }
+    .sbtn.primary { background: var(--brand); color: #fff; border-color: var(--brand); }
+    .edit { display: grid; gap: 0 20px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+    .edit .wide { grid-column: 1 / -1; }
+    .checks { display: flex; flex-wrap: wrap; gap: 6px 16px; }
+    .checks label { font-weight: 450; display: inline-flex; gap: 6px; align-items: center; margin: 0; }
+    .checks input { width: auto; }
+    .photos { display: flex; gap: 8px; flex-wrap: wrap; }
+    .photos figure { margin: 0; position: relative; }
+    .photos img { width: 140px; height: 94px; object-fit: cover; border-radius: 6px; }
+    .photos button { position: absolute; top: 4px; right: 4px; }
+    .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 12px 20px; border-radius: 999px; z-index: 20; box-shadow: 0 6px 24px rgba(15,46,53,.25); }
+    .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 0.8rem; font-weight: 600; background: var(--line-2); }
+    .pill.ok { background: var(--yes-soft); color: #176843; } .pill.warn { background: var(--limited-soft); color: #7d5406; } .pill.bad { background: var(--no-soft); color: #86303a; }
+    .login { max-width: 420px; margin: 80px auto; text-align: center; }
+    .rv-text { max-width: 60ch; white-space: pre-wrap; }
+    .publish { margin-left: 8px; }
+  </style>
+
+  <script>
+    import { createClient, type Session } from '@supabase/supabase-js';
+    const cfgEl = document.getElementById('cfg')!;
+    const CATS: [string, string][] = JSON.parse(cfgEl.dataset.cats!);
+    const INS: [string, string][] = JSON.parse(cfgEl.dataset.ins!);
+    const app = document.getElementById('app')!;
+    const toastEl = document.getElementById('toast')!;
+    const esc = (s: unknown) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
+    const today = () => new Date().toISOString().slice(0, 10);
+    const fmt = (d: string | null) => (d ? new Date(d).toLocaleString('cs-CZ', { day: 'numeric', month: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '');
+    const slugify = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 90);
+    let tId: any;
+    const toast = (m: string) => { toastEl.textContent = m; toastEl.hidden = false; clearTimeout(tId); tId = setTimeout(() => (toastEl.hidden = true), 3500); };
+
+    if (!cfgEl.dataset.url || !cfgEl.dataset.key) {
+      app.innerHTML = '<div class="login panel"><h1 style="font-size:1.5rem">Administrace není nastavená</h1><p>Chybí proměnné PUBLIC_SUPABASE_URL a PUBLIC_SUPABASE_ANON_KEY.</p></div>';
+      throw new Error('no config');
+    }
+    const sb = createClient(cfgEl.dataset.url, cfgEl.dataset.key);
+    let session: Session | null = null;
+    let clinicsCache: any[] | null = null;
+    let dirty = false; // změny, které ještě nejsou na veřejném webu
+
+    async function loadClinics(force = false) {
+      if (clinicsCache && !force) return clinicsCache;
+      const all: any[] = [];
+      for (let from = 0; ; from += 1000) {
+        const { data, error } = await sb.from('clinics').select('*').order('display_name').range(from, from + 999);
+        if (error) throw error;
+        all.push(...data);
+        if (data.length < 1000) break;
+      }
+      clinicsCache = all;
+      return all;
+    }
+    const clinicName = (id: string) => clinicsCache?.find((c) => c.id === id)?.display_name ?? '—';
+    const markDirty = () => { dirty = true; renderUser(); };
+
+    function renderUser() {
+      const u = document.getElementById('user')!;
+      if (!session) { u.innerHTML = ''; return; }
+      u.innerHTML = `<button id="pub" class="publish" title="Spustí nový build webu">${dirty ? 'Zveřejnit změny •' : 'Zveřejnit změny'}</button><span>${esc(session.user.email)}</span><button id="logout">Odhlásit</button>`;
+      u.querySelector('#logout')!.addEventListener('click', async () => { await sb.auth.signOut(); location.reload(); });
+      u.querySelector('#pub')!.addEventListener('click', publish);
+    }
+    async function publish() {
+      const r = await fetch('/api/admin/publish', { method: 'POST', headers: { authorization: `Bearer ${session!.access_token}` } });
+      const j = await r.json().catch(() => ({}));
+      toast(j.message || j.error || 'Hotovo');
+      if (r.ok) { dirty = false; renderUser(); }
+    }
+
+    // ---------- Přehled ----------
+    async function viewPrehled() {
+      const cl = await loadClinics();
+      const count = async (t: string, f?: (q: any) => any) => { let q = sb.from(t).select('*', { count: 'exact', head: true }); if (f) q = f(q); return (await q).count ?? 0; };
+      const [rPend, rPub, inqNew, clNew, repOpen] = await Promise.all([
+        count('reviews', (q) => q.eq('status', 'pending')), count('reviews', (q) => q.eq('status', 'published')),
+        count('inquiries', (q) => q.eq('status', 'new')), count('claims', (q) => q.eq('status', 'new')), count('reports', (q) => q.eq('resolved', false)),
+      ]);
+      const s = (n: number, l: string, h: string) => `<a class="stat" href="${h}"><b>${n}</b><span>${l}</span></a>`;
+      const withStatus = cl.filter((c) => c.accepts_new).length;
+      const stale = cl.filter((c) => c.accepts_new && c.accepts_new_checked_at && Date.now() - new Date(c.accepts_new_checked_at).getTime() > 90 * 864e5).length;
+      app.innerHTML = `<h1 style="font-size:1.8rem">Přehled</h1>
+        <div class="stats">
+          ${s(cl.length, 'ordinací celkem', '#ordinace')}
+          ${s(cl.filter((c) => c.hidden).length, 'skrytých', '#ordinace')}
+          ${s(cl.filter((c) => c.premium).length, 'prémiových', '#ordinace')}
+          ${s(withStatus, 's ověřeným příjmem pacientů', '#ordinace')}
+          ${s(stale, 'ověření starší 90 dnů', '#ordinace')}
+          ${s(cl.filter((c) => c.insurers?.length).length, 's vyplněnými pojišťovnami', '#ordinace')}
+        </div>
+        <div class="stats">
+          ${s(inqNew, 'poptávek k předání', '#poptavky')}
+          ${s(clNew, 'nových žádostí ordinací', '#zadosti')}
+          ${s(repOpen, 'nevyřízených hlášení', '#hlaseni')}
+          ${s(rPend, 'recenzí čeká na potvrzení', '#recenze')}
+          ${s(rPub, 'zveřejněných recenzí', '#recenze')}
+        </div>
+        <p class="muted small">Změny v ordinacích a moderace recenzí se na veřejném webu projeví po stisknutí „Zveřejnit změny" (build trvá 1–2 minuty). Potvrzená recenze web aktualizuje sama.</p>`;
+    }
+
+    // ---------- Ordinace ----------
+    const statusSel = (c: any) => `<select data-quick="${c.id}" aria-label="Příjem pacientů">
+      <option value="" ${!c.accepts_new ? 'selected' : ''}>neověřeno</option>
+      <option value="ano" ${c.accepts_new === 'ano' ? 'selected' : ''}>bere</option>
+      <option value="omezene" ${c.accepts_new === 'omezene' ? 'selected' : ''}>omezeně</option>
+      <option value="ne" ${c.accepts_new === 'ne' ? 'selected' : ''}>nebere</option></select>`;
+
+    async function viewOrdinace() {
+      const cl = await loadClinics();
+      const cities = [...new Set(cl.map((c) => c.city))].sort((a, b) => a.localeCompare(b, 'cs'));
+      app.innerHTML = `<h1 style="font-size:1.8rem">Ordinace</h1>
+        <div class="bar">
+          <input type="search" id="q" placeholder="Hledat název, adresu, IČO…" />
+          <select id="fc"><option value="">Všechna města</option>${cities.map((c) => `<option>${esc(c)}</option>`).join('')}</select>
+          <select id="ff"><option value="">Vše</option><option value="nostatus">Bez ověřeného příjmu</option><option value="stale">Ověření starší 90 dnů</option><option value="noins">Bez pojišťoven</option><option value="nocontact">Bez telefonu</option><option value="premium">Prémiové</option><option value="hidden">Skryté</option></select>
+          <button class="sbtn primary" id="new">+ Přidat ordinaci</button>
+          <span class="muted small" id="cnt"></span>
+        </div>
+        <table><thead><tr><th>Název</th><th>Adresa</th><th>Obory</th><th>Nové pacienty</th><th>Ověřeno</th><th></th></tr></thead><tbody id="tb"></tbody></table>`;
+      const tb = document.getElementById('tb')!;
+      const draw = () => {
+        const q = slugify((document.getElementById('q') as HTMLInputElement).value);
+        const fc = (document.getElementById('fc') as HTMLSelectElement).value;
+        const ff = (document.getElementById('ff') as HTMLSelectElement).value;
+        const rows = cl.filter((c) => {
+          if (q && !slugify([c.display_name, c.legal_name, c.street, c.city, c.ico].join(' ')).includes(q)) return false;
+          if (fc && c.city !== fc) return false;
+          if (ff === 'nostatus' && c.accepts_new) return false;
+          if (ff === 'stale' && !(c.accepts_new_checked_at && Date.now() - new Date(c.accepts_new_checked_at).getTime() > 90 * 864e5)) return false;
+          if (ff === 'noins' && c.insurers?.length) return false;
+          if (ff === 'nocontact' && c.phone) return false;
+          if (ff === 'premium' && !c.premium) return false;
+          if (ff === 'hidden' && !c.hidden) return false;
+          return true;
+        });
+        document.getElementById('cnt')!.textContent = `${rows.length} z ${cl.length}`;
+        tb.innerHTML = rows.slice(0, 400).map((c) => `<tr>
+          <td><a href="#ordinace/${c.id}"><b>${esc(c.display_name)}</b></a>${c.premium ? ' <span class="pill" style="background:var(--premium-soft);color:var(--premium)">prémium</span>' : ''}${c.hidden ? ' <span class="pill bad">skryto</span>' : ''}<br><span class="small muted">${esc(c.phone || 'bez telefonu')}</span></td>
+          <td class="small">${esc(c.street)}<br>${esc(c.city)}${c.city_part ? ' – ' + esc(c.city_part) : ''}</td>
+          <td class="small">${(c.categories ?? []).map((s: string) => esc(CATS.find((x) => x[0] === s)?.[1] ?? s)).join(', ')}</td>
+          <td>${statusSel(c)}</td>
+          <td class="small">${c.accepts_new_checked_at ? new Date(c.accepts_new_checked_at).toLocaleDateString('cs-CZ') : '—'}</td>
+          <td><a class="sbtn" href="/zubar/${c.slug}" target="_blank">Web</a></td></tr>`).join('');
+      };
+      ['q', 'fc', 'ff'].forEach((id) => document.getElementById(id)!.addEventListener('input', draw));
+      tb.addEventListener('change', async (e) => {
+        const sel = e.target as HTMLSelectElement;
+        if (!sel.dataset.quick) return;
+        const patch = { accepts_new: sel.value || null, accepts_new_checked_at: sel.value ? today() : null };
+        const { error } = await sb.from('clinics').update(patch).eq('id', sel.dataset.quick);
+        if (error) return toast('Chyba: ' + error.message);
+        Object.assign(cl.find((c) => c.id === sel.dataset.quick), patch);
+        markDirty(); draw(); toast('Uloženo');
+      });
+      document.getElementById('new')!.addEventListener('click', () => (location.hash = 'ordinace/nova'));
+      draw();
+    }
+
+    async function viewOrdinaceEdit(id: string) {
+      const cl = await loadClinics();
+      const isNew = id === 'nova';
+      const c = isNew ? { categories: ['zubar'], insurers: [], photos: [], kraj: 'Moravskoslezský kraj' } as any : cl.find((x) => x.id === id);
+      if (!c) { app.innerHTML = '<p>Ordinace nenalezena.</p>'; return; }
+      const f = (name: string, label: string, type = 'text', extra = '') => `<div class="field"><label>${label}</label><input name="${name}" type="${type}" value="${esc(c[name] ?? '')}" ${extra}/></div>`;
+      const ta = (name: string, label: string, rows = 4, wide = true) => `<div class="field ${wide ? 'wide' : ''}"><label>${label}</label><textarea name="${name}" rows="${rows}">${esc(c[name] ?? '')}</textarea></div>`;
+      app.innerHTML = `<p><a href="#ordinace">← Zpět na seznam</a></p>
+        <h1 style="font-size:1.6rem">${isNew ? 'Nová ordinace' : esc(c.display_name)}</h1>
+        ${!isNew ? `<p class="small muted">${esc(c.legal_name)} · NRPZS ${esc(c.nrpzs_id ?? '—')} · IČO ${esc(c.ico ?? '—')} · <a href="/zubar/${c.slug}" target="_blank">zobrazit na webu</a></p>` : ''}
+        <form id="ef" class="panel">
+          <h2 style="font-size:1.1rem">Příjem pacientů a pojišťovny</h2>
+          <div class="edit">
+            <div class="field"><label>Nové pacienty</label><select name="accepts_new">
+              <option value="">neověřeno</option><option value="ano">bere</option><option value="omezene">omezeně</option><option value="ne">nebere</option></select></div>
+            ${f('accepts_new_checked_at', 'Ověřeno dne', 'date')}
+            ${f('accepts_new_note', 'Zdroj / poznámka (interní)')}
+            <div class="field wide"><label>Smluvní pojišťovny</label><div class="checks">${INS.map(([code, n]) => `<label><input type="checkbox" name="insurers" value="${code}" ${c.insurers?.includes(code) ? 'checked' : ''}/> ${n} ${code}</label>`).join('')}
+              <button type="button" class="sbtn" id="allins">Všechny</button></div></div>
+            ${ta('opening_hours', 'Ordinační hodiny (zobrazí se tak, jak napíšete)', 5, false)}
+          </div>
+          <h2 style="font-size:1.1rem;margin-top:12px">Základní údaje</h2>
+          <div class="edit">
+            ${f('display_name', 'Zobrazovaný název', 'text', 'required')}
+            ${f('legal_name', 'Název podle registru', 'text', 'required')}
+            ${f('slug', 'Adresa stránky (/zubar/…)', 'text', isNew ? 'placeholder="vytvoří se automaticky"' : 'readonly title="Adresu po zveřejnění neměňte – rozbily by se odkazy"')}
+            <div class="field wide"><label>Obory</label><div class="checks">${CATS.map(([s, n]) => `<label><input type="checkbox" name="categories" value="${s}" ${c.categories?.includes(s) ? 'checked' : ''}/> ${n}</label>`).join('')}
+              <label><input type="checkbox" name="is_clinic" ${c.is_clinic ? 'checked' : ''}/> <b>Klinika</b></label></div>
+              <p class="small muted" style="margin:6px 0 0">První zaškrtnutý obor v pořadí výše je hlavní (určuje nadpis a „podobné ordinace").</p></div>
+            ${f('street', 'Ulice a číslo')}${f('zip', 'PSČ')}${f('city', 'Město', 'text', 'required')}${f('city_part', 'Část města')}
+            ${f('lat', 'GPS šířka', 'number', 'step="any"')}${f('lng', 'GPS délka', 'number', 'step="any"')}
+            ${f('phone', 'Telefon', 'tel')}${f('email', 'E-mail', 'email')}${f('web', 'Web', 'url')}
+          </div>
+          <h2 style="font-size:1.1rem;margin-top:12px">Prémiový profil</h2>
+          <div class="edit">
+            <div class="field"><label class="check"><input type="checkbox" name="premium" ${c.premium ? 'checked' : ''}/> <span>Prémiový profil aktivní</span></label></div>
+            ${f('premium_until', 'Zaplaceno do', 'date')}
+            ${ta('description', 'Popis ordinace (jen u prémiových; odstavce oddělte prázdným řádkem)', 6)}
+            <div class="field wide"><label>Fotografie (max. 5, jen u prémiových)</label><div class="photos" id="photos"></div>
+              <input type="file" id="upl" accept="image/jpeg,image/png,image/webp" multiple style="margin-top:8px" ${isNew ? 'disabled title="Nejdřív ordinaci uložte"' : ''}/></div>
+          </div>
+          <h2 style="font-size:1.1rem;margin-top:12px">Ostatní</h2>
+          <div class="edit">
+            <div class="field"><label class="check"><input type="checkbox" name="hidden" ${c.hidden ? 'checked' : ''}/> <span>Skrýt z webu</span></label></div>
+            ${ta('admin_note', 'Interní poznámka (nezobrazuje se)', 3)}
+          </div>
+          <div class="bar" style="margin-top:8px"><button class="btn" type="submit">Uložit</button>${!isNew ? '<button type="button" class="sbtn danger" id="del">Smazat ordinaci</button>' : ''}</div>
+        </form>`;
+      const form = document.getElementById('ef') as HTMLFormElement;
+      (form.elements.namedItem('accepts_new') as HTMLSelectElement).value = c.accepts_new ?? '';
+      form.accepts_new.addEventListener('change', () => { (form.elements.namedItem('accepts_new_checked_at') as HTMLInputElement).value = today(); });
+      document.getElementById('allins')!.addEventListener('click', () => form.querySelectorAll<HTMLInputElement>('input[name=insurers]').forEach((i) => (i.checked = true)));
+      let photos: string[] = [...(c.photos ?? [])];
+      const drawPhotos = () => {
+        document.getElementById('photos')!.innerHTML = photos.map((p, i) => `<figure><img src="${esc(p)}" alt=""/><button type="button" class="sbtn danger" data-rm="${i}">×</button></figure>`).join('') || '<span class="small muted">Žádné fotky</span>';
+      };
+      drawPhotos();
+      document.getElementById('photos')!.addEventListener('click', (e) => { const i = (e.target as HTMLElement).dataset.rm; if (i != null) { photos.splice(+i, 1); drawPhotos(); } });
+      document.getElementById('upl')!.addEventListener('change', async (e) => {
+        const files = [...((e.target as HTMLInputElement).files ?? [])].slice(0, 5 - photos.length);
+        for (const file of files) {
+          if (file.size > 4 * 1024 * 1024) { toast(`${file.name} je větší než 4 MB`); continue; }
+          const path = `${c.id}/${Date.now()}-${slugify(file.name.replace(/\.\w+$/, ''))}.${file.name.split('.').pop()}`;
+          const { error } = await sb.storage.from('photos').upload(path, file, { contentType: file.type });
+          if (error) { toast('Nahrání selhalo: ' + error.message); continue; }
+          photos.push(sb.storage.from('photos').getPublicUrl(path).data.publicUrl);
+        }
+        drawPhotos(); toast('Fotky nahrány – nezapomeňte uložit');
+      });
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const d = new FormData(form);
+        const num = (k: string) => (d.get(k) ? parseFloat(String(d.get(k))) : null);
+        const txt = (k: string) => String(d.get(k) ?? '').trim();
+        const order = CATS.map((x) => x[0]);
+        const patch: any = {
+          display_name: txt('display_name'), legal_name: txt('legal_name'),
+          categories: (d.getAll('categories') as string[]).sort((a, b) => order.indexOf(a) - order.indexOf(b)),
+          is_clinic: d.has('is_clinic'), street: txt('street'), zip: txt('zip'), city: txt('city'), city_part: txt('city_part'),
+          lat: num('lat'), lng: num('lng'), phone: txt('phone'), email: txt('email').toLowerCase(), web: txt('web'),
+          accepts_new: txt('accepts_new') || null, accepts_new_checked_at: txt('accepts_new_checked_at') || null, accepts_new_note: txt('accepts_new_note'),
+          insurers: d.getAll('insurers'), opening_hours: txt('opening_hours'),
+          premium: d.has('premium'), premium_until: txt('premium_until') || null, description: txt('description'), photos,
+          hidden: d.has('hidden'), admin_note: txt('admin_note'),
+        };
+        if (!patch.categories.length) return toast('Vyberte aspoň jeden obor');
+        let res;
+        if (isNew) {
+          let base = txt('slug') || slugify(`${patch.display_name} ${patch.city}`), slug = base, i = 2;
+          while (cl.some((x) => x.slug === slug)) slug = `${base}-${i++}`;
+          res = await sb.from('clinics').insert({ ...patch, slug }).select().single();
+        } else res = await sb.from('clinics').update(patch).eq('id', c.id).select().single();
+        if (res.error) return toast('Chyba: ' + res.error.message);
+        if (isNew) cl.push(res.data); else Object.assign(c, res.data);
+        markDirty(); toast('Uloženo');
+        if (isNew) location.hash = `ordinace/${res.data.id}`;
+      });
+      document.getElementById('del')?.addEventListener('click', async () => {
+        const btn = document.getElementById('del')!;
+        if (btn.dataset.confirm !== '1') { btn.dataset.confirm = '1'; btn.textContent = 'Opravdu smazat? Klikněte znovu'; return; }
+        const { error } = await sb.from('clinics').delete().eq('id', c.id);
+        if (error) return toast('Chyba: ' + error.message);
+        clinicsCache = cl.filter((x) => x.id !== c.id);
+        markDirty(); toast('Smazáno'); location.hash = 'ordinace';
+      });
+    }
+
+    // ---------- Recenze ----------
+    async function viewRecenze() {
+      await loadClinics();
+      app.innerHTML = `<h1 style="font-size:1.8rem">Recenze</h1><div class="bar"><select id="st"><option value="published">Zveřejněné</option><option value="pending">Čekají na potvrzení e-mailem</option><option value="hidden">Skryté</option></select></div><div id="list"></div>`;
+      const draw = async () => {
+        const st = (document.getElementById('st') as HTMLSelectElement).value;
+        const { data, error } = await sb.from('reviews').select('*').eq('status', st).order('created_at', { ascending: false }).limit(300);
+        if (error) return toast(error.message);
+        document.getElementById('list')!.innerHTML = data.length ? `<table><thead><tr><th>Ordinace</th><th>Recenze</th><th>Odpověď ordinace</th><th></th></tr></thead><tbody>${data.map((r) => `<tr>
+          <td><b>${esc(clinicName(r.clinic_id))}</b><br><span class="small muted">${fmt(r.created_at)}</span></td>
+          <td><b>${'★'.repeat(r.rating)}</b> ${esc(r.author_name)} <span class="small muted">(${esc(r.email)})</span><div class="rv-text">${esc(r.text)}</div></td>
+          <td><textarea data-reply="${r.id}" rows="3" placeholder="Text odpovědi ordinace">${esc(r.clinic_reply ?? '')}</textarea><button class="sbtn" data-savereply="${r.id}">Uložit odpověď</button></td>
+          <td style="white-space:nowrap">${st !== 'published' ? `<button class="sbtn" data-set="published" data-id="${r.id}">Zveřejnit</button>` : ''} ${st !== 'hidden' ? `<button class="sbtn" data-set="hidden" data-id="${r.id}">Skrýt</button>` : ''} <button class="sbtn danger" data-del="${r.id}">Smazat</button></td></tr>`).join('')}</tbody></table>` : '<p class="muted">Nic tu není.</p>';
+      };
+      document.getElementById('st')!.addEventListener('change', draw);
+      document.getElementById('list')!.addEventListener('click', async (e) => {
+        const b = e.target as HTMLElement;
+        if (b.dataset.set) { const { error } = await sb.from('reviews').update({ status: b.dataset.set, verify_token: null }).eq('id', b.dataset.id); if (error) return toast(error.message); markDirty(); toast('Uloženo'); draw(); }
+        if (b.dataset.del) { if (b.dataset.confirm !== '1') { b.dataset.confirm = '1'; b.textContent = 'Opravdu?'; return; } await sb.from('reviews').delete().eq('id', b.dataset.del); markDirty(); toast('Smazáno'); draw(); }
+        if (b.dataset.savereply) {
+          const text = (document.querySelector(`[data-reply="${b.dataset.savereply}"]`) as HTMLTextAreaElement).value.trim();
+          const { error } = await sb.from('reviews').update({ clinic_reply: text || null, clinic_reply_at: text ? new Date().toISOString() : null }).eq('id', b.dataset.savereply);
+          if (error) return toast(error.message); markDirty(); toast('Odpověď uložena');
+        }
+      });
+      draw();
+    }
+
+    // ---------- Jednoduché seznamy se stavem ----------
+    async function viewList(opts: { title: string; table: string; statuses: [string, string][]; cols: (r: any) => string; head: string; statusField?: string }) {
+      await loadClinics();
+      const sf = opts.statusField ?? 'status';
+      app.innerHTML = `<h1 style="font-size:1.8rem">${opts.title}</h1><div class="bar"><select id="st"><option value="">Vše</option>${opts.statuses.map(([v, l]) => `<option value="${v}">${l}</option>`).join('')}</select></div><div id="list"></div>`;
+      (document.getElementById('st') as HTMLSelectElement).value = opts.statuses[0][0];
+      const draw = async () => {
+        const st = (document.getElementById('st') as HTMLSelectElement).value;
+        let q = sb.from(opts.table).select('*').order('created_at', { ascending: false }).limit(300);
+        if (st) q = q.eq(sf, sf === 'resolved' ? st === 'true' : st);
+        const { data, error } = await q;
+        if (error) return toast(error.message);
+        document.getElementById('list')!.innerHTML = data.length ? `<table><thead><tr>${opts.head}<th>Stav</th></tr></thead><tbody>${data.map((r) => `<tr>${opts.cols(r)}<td><select data-id="${r.id}">${opts.statuses.map(([v, l]) => `<option value="${v}" ${String(r[sf]) === v ? 'selected' : ''}>${l}</option>`).join('')}</select></td></tr>`).join('')}</tbody></table>` : '<p class="muted">Nic tu není.</p>';
+      };
+      document.getElementById('st')!.addEventListener('change', draw);
+      document.getElementById('list')!.addEventListener('change', async (e) => {
+        const s = e.target as HTMLSelectElement;
+        if (!s.dataset.id) return;
+        const { error } = await sb.from(opts.table).update({ [sf]: sf === 'resolved' ? s.value === 'true' : s.value }).eq('id', s.dataset.id);
+        toast(error ? error.message : 'Uloženo');
+      });
+      draw();
+    }
+    const clinicCell = (id: string | null, fallback = '') => id ? `<a href="#ordinace/${id}">${esc(clinicName(id))}</a>` : esc(fallback || '—');
+
+    // ---------- Statistiky ----------
+    async function viewStatistiky() {
+      const cl = await loadClinics();
+      const since = new Date(Date.now() - 30 * 864e5).toISOString().slice(0, 10);
+      const all: any[] = [];
+      for (let from = 0; ; from += 1000) {
+        const { data, error } = await sb.from('clinic_stats').select('*').gte('day', since).range(from, from + 999);
+        if (error) return toast(error.message);
+        all.push(...data); if (data.length < 1000) break;
+      }
+      const agg = new Map<string, Record<string, number>>();
+      for (const r of all) { const a = agg.get(r.clinic_id) ?? {}; a[r.kind] = (a[r.kind] ?? 0) + r.count; agg.set(r.clinic_id, a); }
+      const rows = [...agg].map(([id, a]) => ({ c: cl.find((x) => x.id === id), a })).filter((x) => x.c).sort((x, y) => (y.a.view ?? 0) - (x.a.view ?? 0));
+      const tot = (k: string) => rows.reduce((s, r) => s + (r.a[k] ?? 0), 0);
+      app.innerHTML = `<h1 style="font-size:1.8rem">Statistiky za posledních 30 dní</h1>
+        <div class="stats">${[['view', 'zobrazení profilů'], ['phone', 'kliknutí na telefon'], ['web', 'prokliků na web'], ['inquiry', 'poptávek']].map(([k, l]) => `<div class="stat"><b>${tot(k)}</b><span>${l}</span></div>`).join('')}</div>
+        <p class="small muted">Tlačítko „Report" zkopíruje text měsíčního přehledu pro ordinaci – hodí se pro prémiové klienty i jako argument při prodeji.</p>
+        <table><thead><tr><th>Ordinace</th><th>Zobrazení</th><th>Telefon</th><th>Web</th><th>E-mail</th><th>Mapa</th><th>Poptávky</th><th></th></tr></thead><tbody>
+        ${rows.map(({ c, a }) => `<tr><td>${esc(c.display_name)}${c.premium ? ' <span class="pill" style="background:var(--premium-soft);color:var(--premium)">prémium</span>' : ''}</td>${['view', 'phone', 'web', 'email', 'map', 'inquiry'].map((k) => `<td>${a[k] ?? 0}</td>`).join('')}<td><button class="sbtn" data-rep="${c.id}">Report</button></td></tr>`).join('')}</tbody></table>`;
+      app.addEventListener('click', async (e) => {
+        const id = (e.target as HTMLElement).dataset.rep; if (!id) return;
+        const r = rows.find((x) => x.c.id === id)!;
+        const text = `Dobrý den,\n\nposíláme přehled profilu ${r.c.display_name} na zubnikliniky.cz za posledních 30 dní:\n\n• zobrazení profilu: ${r.a.view ?? 0}\n• kliknutí na telefon: ${r.a.phone ?? 0}\n• prokliky na web: ${r.a.web ?? 0}\n• poptávky termínu: ${r.a.inquiry ?? 0}\n\nProfil: https://www.zubnikliniky.cz/zubar/${r.c.slug}\n\nS pozdravem\nzubnikliniky.cz`;
+        await navigator.clipboard.writeText(text); toast('Report zkopírován do schránky');
+      });
+    }
+
+    // ---------- Router ----------
+    async function route() {
+      if (!session) return;
+      const h = location.hash.slice(1) || 'prehled';
+      const [page, arg] = h.split('/');
+      document.querySelectorAll('#tabs a').forEach((a) => a.classList.toggle('on', a.getAttribute('href') === '#' + page));
+      app.innerHTML = '<p class="muted">Načítám…</p>';
+      try {
+        if (page === 'ordinace' && arg) return await viewOrdinaceEdit(arg);
+        if (page === 'ordinace') return await viewOrdinace();
+        if (page === 'recenze') return await viewRecenze();
+        if (page === 'poptavky') return await viewList({
+          title: 'Poptávky termínů', table: 'inquiries', statuses: [['new', 'K předání'], ['forwarded', 'Předáno'], ['done', 'Vyřízeno'], ['spam', 'Spam']],
+          head: '<th>Kdy</th><th>Ordinace</th><th>Pacient</th><th>Zpráva</th>',
+          cols: (r) => `<td class="small">${fmt(r.created_at)}</td><td>${clinicCell(r.clinic_id)}${r.forwarded_to ? `<br><span class="small muted">→ ${esc(r.forwarded_to)}</span>` : ''}</td><td><b>${esc(r.name)}</b><br><a href="tel:${esc(r.phone)}">${esc(r.phone)}</a><br><a href="mailto:${esc(r.email)}">${esc(r.email)}</a><br><span class="small muted">pojišťovna ${esc(r.insurer || '—')} · ${esc(r.patient_type)}</span></td><td class="rv-text small">${esc(r.message)}</td>`,
+        });
+        if (page === 'zadosti') return await viewList({
+          title: 'Žádosti ordinací', table: 'claims', statuses: [['new', 'Nová'], ['contacted', 'Kontaktováno'], ['won', 'Vyřízeno / zaplaceno'], ['lost', 'Nezájem']],
+          head: '<th>Kdy</th><th>Ordinace</th><th>Kontakt</th><th>Zájem a zpráva</th>',
+          cols: (r) => `<td class="small">${fmt(r.created_at)}</td><td>${clinicCell(r.clinic_id, r.clinic_name)}</td><td><b>${esc(r.contact_name)}</b><br><a href="mailto:${esc(r.email)}">${esc(r.email)}</a><br>${esc(r.phone)}</td><td><span class="pill ${r.interest === 'premium' ? 'ok' : ''}">${esc(r.interest)}</span><div class="rv-text small">${esc(r.message)}</div></td>`,
+        });
+        if (page === 'hlaseni') return await viewList({
+          title: 'Hlášení a opravy údajů', table: 'reports', statusField: 'resolved', statuses: [['false', 'Nevyřízené'], ['true', 'Vyřízené']],
+          head: '<th>Kdy</th><th>Typ</th><th>Ordinace</th><th>Zpráva</th>',
+          cols: (r) => `<td class="small">${fmt(r.created_at)}</td><td><span class="pill ${r.kind === 'review' ? 'warn' : ''}">${r.kind === 'review' ? 'recenze' : 'údaje'}</span></td><td>${clinicCell(r.clinic_id, 'kontaktní formulář')}</td><td class="rv-text small">${esc(r.message)}${r.email ? `<br><a href="mailto:${esc(r.email)}">${esc(r.email)}</a>` : ''}</td>`,
+        });
+        if (page === 'statistiky') return await viewStatistiky();
+        return await viewPrehled();
+      } catch (e: any) { app.innerHTML = `<p class="form-msg" data-kind="err">Chyba: ${esc(e.message)}</p>`; }
+    }
+
+    async function start() {
+      const { data } = await sb.auth.getSession();
+      session = data.session;
+      if (!session) {
+        app.innerHTML = `<div class="login panel"><h1 style="font-size:1.5rem">Administrace</h1><p class="muted">Přihlaste se účtem Google, který má roli správce.</p><button class="btn" id="g">Přihlásit přes Google</button></div>`;
+        document.getElementById('g')!.addEventListener('click', () => sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.origin + '/admin' } }));
+        return;
+      }
+      const { data: isAdm, error } = await sb.rpc('claim_first_admin');
+      if (error || !isAdm) {
+        app.innerHTML = `<div class="login panel"><h1 style="font-size:1.5rem">Nemáte oprávnění</h1><p>Účet ${esc(session.user.email)} není správce.</p><button class="btn btn-ghost" id="lo">Odhlásit</button></div>`;
+        document.getElementById('lo')!.addEventListener('click', async () => { await sb.auth.signOut(); location.reload(); });
+        return;
+      }
+      document.getElementById('tabs')!.hidden = false;
+      renderUser();
+      window.addEventListener('hashchange', route);
+      route();
+    }
+    sb.auth.onAuthStateChange((_e, s) => { session = s; });
+    start();
+  </script>
+</body>
+</html>

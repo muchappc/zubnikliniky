@@ -1,0 +1,45 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import Breadcrumbs from '../../../components/Breadcrumbs.astro';
+import ClinicList from '../../../components/ClinicList.astro';
+import { getClinics, getCategoryCounts } from '../../../lib/data';
+import { CATEGORIES, slugify, locative } from '../../../lib/taxonomy.mjs';
+import { summary } from '../../../lib/text';
+
+export async function getStaticPaths() {
+  const all = await getClinics();
+  return CATEGORIES.filter((c) => all.some((x) => x.categories.includes(c.slug))).map((cat) => ({ params: { cat: cat.slug }, props: { cat } }));
+}
+const { cat } = Astro.props as { cat: (typeof CATEGORIES)[number] };
+const list = (await getClinics()).filter((c) => c.categories.includes(cat.slug));
+const cats = await getCategoryCounts();
+const cityCounts = new Map<string, { name: string; n: number }>();
+for (const c of list) cityCounts.set(c.city_slug, { name: c.city, n: (cityCounts.get(c.city_slug)?.n ?? 0) + 1 });
+const cities = [...cityCounts].sort((a, b) => b[1].n - a[1].n);
+---
+<Layout title={`${cat.name} – Moravskoslezský kraj`} description={`${cat.name}: ${list.length} ordinací v Moravskoslezském kraji. ${cat.desc} Kdo bere nové pacienty, pojišťovny a recenze.`}>
+  <Breadcrumbs items={[{ name: 'Obory', href: '/obor/zubar' }, { name: cat.name }]} />
+  <section class="section" style="padding-top:20px">
+    <div class="wrap">
+      <nav class="tabs" aria-label="Obory">
+        {cats.map((c) => <a href={`/obor/${c.slug}`} aria-current={c.slug === cat.slug ? 'page' : undefined}>{c.name}</a>)}
+      </nav>
+      <h1>{cat.name} v Moravskoslezském kraji</h1>
+      <p class="lead">{cat.desc} {summary(list, 'v kraji')}</p>
+      {cities.length > 1 && (
+        <nav class="subnav" aria-label="Města">
+          <span class="muted small">Podle měst:</span>
+          {cities.slice(0, 14).map(([slug, v]) => (v.n >= 2 ? <a href={`/obor/${cat.slug}/${slug}`}>{v.name} <span class="muted">({v.n})</span></a> : <a href={`/mesto/${slug}?obor=${cat.slug}`}>{v.name} <span class="muted">({v.n})</span></a>))}
+        </nav>
+      )}
+      <ClinicList clinics={list} catFilter={false} />
+    </div>
+  </section>
+</Layout>
+<style>
+  .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+  .tabs a { padding: 7px 14px; border-radius: 999px; border: 1.5px solid var(--line); text-decoration: none; color: var(--ink); font-weight: 550; font-size: 0.93rem; background: var(--surface); }
+  .tabs a[aria-current='page'] { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .subnav { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: baseline; margin: 0 0 12px; font-size: 0.95rem; }
+  .subnav a { text-decoration: none; font-weight: 550; }
+</style>

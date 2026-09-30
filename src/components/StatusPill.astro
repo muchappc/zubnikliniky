@@ -1,0 +1,10 @@
+---
+import { NEW_PATIENTS } from '../lib/taxonomy.mjs';
+interface Props { value: 'ano' | 'ne' | 'omezene' | null; checkedAt?: string | null; long?: boolean }
+const { value, checkedAt, long = false } = Astro.props;
+const s = value ? NEW_PATIENTS[value] : null;
+const date = checkedAt ? new Date(checkedAt).toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric', year: 'numeric' }) : null;
+---
+<span class="status" data-tone={s?.tone ?? 'unknown'}>
+  {s ? s.label : 'Příjem pacientů neověřen'}{long && date && <span style="font-weight:450"> · ověřeno {date}</span>}
+</span>

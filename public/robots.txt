@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /admin
+Disallow: /api/
+Disallow: /hledat
+Sitemap: https://www.zubnikliniky.cz/sitemap-index.xml

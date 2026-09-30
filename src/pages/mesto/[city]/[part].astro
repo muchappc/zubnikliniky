@@ -1,0 +1,35 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import Breadcrumbs from '../../../components/Breadcrumbs.astro';
+import ClinicList from '../../../components/ClinicList.astro';
+import { getCities, getParts, type Place } from '../../../lib/data';
+import { locative, plural } from '../../../lib/taxonomy.mjs';
+import { summary } from '../../../lib/text';
+
+export async function getStaticPaths() {
+  const out = [];
+  for (const city of await getCities()) {
+    const parts = await getParts(city.slug);
+    if (parts.length < 2) continue;
+    for (const part of parts) out.push({ params: { city: city.slug, part: part.slug }, props: { city, part, parts } });
+  }
+  return out;
+}
+const { city, part, parts } = Astro.props as { city: Place; part: Place; parts: Place[] };
+const loc = locative(part.name);
+---
+<Layout
+  title={`Zubaři ${part.name} (${city.name}) – kdo bere nové pacienty`}
+  description={`${part.count} ${plural(part.count, 'zubní ordinace', 'zubní ordinace', 'zubních ordinací')} a dentálních hygien ${loc}. Kdo bere nové pacienty, pojišťovny, kontakty a recenze.`}>
+  <Breadcrumbs items={[{ name: 'Města', href: '/mesta' }, { name: city.name, href: `/mesto/${city.slug}` }, { name: part.name }]} />
+  <section class="section" style="padding-top:20px">
+    <div class="wrap">
+      <h1>Zubaři {loc}</h1>
+      <p class="lead">{summary(part.clinics, loc)}</p>
+      <p class="small muted">Části města určujeme podle PSČ adresy ordinace, na hranicích obvodů se mohou lišit. Nenašli jste nic vhodného? Podívejte se na <a href={`/mesto/${city.slug}`}>všechny zubaře {locative(city.name)}</a>.</p>
+      <ClinicList clinics={part.clinics} />
+      <h2 style="margin-top:40px">Další části města</h2>
+      <ul class="places">{parts.filter((p) => p.slug !== part.slug).map((p) => <li><a href={`/mesto/${city.slug}/${p.slug}`}>{p.name}<span class="n">{p.count}</span></a></li>)}</ul>
+    </div>
+  </section>
+</Layout>

@@ -1,0 +1,81 @@
+---
+import type { Clinic, Place } from '../lib/data';
+import ClinicRow from './ClinicRow.astro';
+import { CATEGORIES, INSURERS, plural } from '../lib/taxonomy.mjs';
+interface Props { clinics: Clinic[]; parts?: Place[]; catFilter?: boolean; emptyText?: string }
+const { clinics, parts = [], catFilter = true, emptyText } = Astro.props;
+const presentCats = CATEGORIES.filter((c) => clinics.some((x) => x.categories.includes(c.slug)));
+const n = clinics.length;
+---
+<clinic-list>
+  <form class="filters" aria-label="Filtrovat ordinace" onsubmit="return false">
+    <label class="toggle"><input type="checkbox" name="nove" /> Jen ty, co berou nové pacienty</label>
+    {catFilter && presentCats.length > 1 && (
+      <select name="obor" aria-label="Obor">
+        <option value="">Všechny obory</option>
+        {presentCats.map((c) => <option value={c.slug}>{c.name}</option>)}
+      </select>
+    )}
+    <select name="pojistovna" aria-label="Zdravotní pojišťovna">
+      <option value="">Jakákoli pojišťovna</option>
+      {INSURERS.map((i) => <option value={i.code}>{i.short} ({i.code})</option>)}
+    </select>
+    {parts.length > 1 && (
+      <select name="cast" aria-label="Část města">
+        <option value="">Celé město</option>
+        {parts.map((p) => <option value={p.slug}>{p.name}</option>)}
+      </select>
+    )}
+    <span class="count" aria-live="polite" data-total={n}>{n} {plural(n, 'ordinace', 'ordinace', 'ordinací')}</span>
+  </form>
+  <ul class="list">
+    {clinics.map((c) => <ClinicRow c={c} />)}
+  </ul>
+  <p class="empty" hidden data-empty>
+    {emptyText ?? 'Tomuto výběru neodpovídá žádná ordinace. U řady ordinací zatím nemáme ověřené pojišťovny ani příjem pacientů – zkuste filtr uvolnit.'}
+  </p>
+</clinic-list>
+
+<script>
+  const plural = (n: number) => (n === 1 ? 'ordinace' : n >= 2 && n <= 4 ? 'ordinace' : 'ordinací');
+  class ClinicList extends HTMLElement {
+    connectedCallback() {
+      const form = this.querySelector('form')!;
+      const rows = [...this.querySelectorAll<HTMLElement>('.row')];
+      const count = this.querySelector('.count')!;
+      const empty = this.querySelector<HTMLElement>('[data-empty]')!;
+      const params = new URLSearchParams(location.search);
+      for (const el of form.elements as any) {
+        if (!el.name || !params.has(el.name)) continue;
+        if (el.type === 'checkbox') el.checked = params.get(el.name) === '1';
+        else el.value = params.get(el.name);
+      }
+      const apply = () => {
+        const f = new FormData(form);
+        const nove = f.get('nove') === 'on', obor = String(f.get('obor') ?? ''), poj = String(f.get('pojistovna') ?? ''), cast = String(f.get('cast') ?? '');
+        let shown = 0;
+        for (const r of rows) {
+          const d = r.dataset;
+          const ok =
+            (!nove || d.new === 'ano' || d.new === 'omezene') &&
+            (!obor || (d.cats ?? '').split(' ').includes(obor)) &&
+            (!poj || (d.ins ?? '').split(' ').includes(poj)) &&
+            (!cast || d.part === cast);
+          r.hidden = !ok;
+          if (ok) shown++;
+        }
+        count.textContent = `${shown} ${plural(shown)}`;
+        empty.hidden = shown > 0;
+        const q = new URLSearchParams();
+        if (nove) q.set('nove', '1');
+        if (obor) q.set('obor', obor);
+        if (poj) q.set('pojistovna', poj);
+        if (cast) q.set('cast', cast);
+        history.replaceState(null, '', q.toString() ? `?${q}` : location.pathname);
+      };
+      form.addEventListener('change', apply);
+      if ([...params.keys()].length) apply();
+    }
+  }
+  customElements.define('clinic-list', ClinicList);
+</script>

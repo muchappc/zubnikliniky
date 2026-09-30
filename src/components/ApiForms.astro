@@ -1,0 +1,37 @@
+---
+// Obsluha všech formulářů s atributem data-api: odešle JSON na API a zobrazí výsledek.
+---
+<script>
+  document.querySelectorAll<HTMLFormElement>('form[data-api]').forEach((form) => {
+    const started = Date.now();
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = form.querySelector<HTMLButtonElement>('button[type=submit]');
+      let msg = form.querySelector<HTMLElement>('.form-msg');
+      if (!msg) { msg = document.createElement('p'); msg.className = 'form-msg'; msg.setAttribute('role', 'status'); form.append(msg); }
+      const data: Record<string, unknown> = {};
+      new FormData(form).forEach((v, k) => {
+        if (k in data) data[k] = ([] as unknown[]).concat(data[k], v);
+        else data[k] = v;
+      });
+      data._t = Date.now() - started;
+      if (btn) btn.disabled = true;
+      msg.hidden = true;
+      try {
+        const res = await fetch(form.dataset.api!, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(data) });
+        const out = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(out.error || 'Odeslání se nepovedlo. Zkuste to prosím znovu za chvíli.');
+        msg.dataset.kind = 'ok';
+        msg.textContent = out.message || form.dataset.ok || 'Odesláno.';
+        form.querySelectorAll('input:not([type=hidden]):not([type=checkbox]), textarea').forEach((el) => ((el as HTMLInputElement).value = ''));
+        form.querySelectorAll<HTMLElement>('[data-hide-on-ok]').forEach((el) => (el.hidden = true));
+      } catch (err) {
+        msg.dataset.kind = 'err';
+        msg.textContent = (err as Error).message;
+      } finally {
+        msg.hidden = false;
+        if (btn) btn.disabled = false;
+      }
+    });
+  });
+</script>

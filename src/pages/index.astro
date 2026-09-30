@@ -1,0 +1,182 @@
+---
+import Layout from '../layouts/Layout.astro';
+import StatusPill from '../components/StatusPill.astro';
+import { getClinics, getCities, getCategoryCounts, getLatestReviews } from '../lib/data';
+import { INSURERS, plural } from '../lib/taxonomy.mjs';
+import { SITE } from '../lib/site';
+
+const clinics = await getClinics();
+const cities = await getCities();
+const cats = await getCategoryCounts();
+const reviews = await getLatestReviews(4);
+const total = clinics.length;
+const tally = { ano: 0, omezene: 0, ne: 0, nic: 0 };
+for (const c of clinics) tally[(c.accepts_new ?? 'nic') as keyof typeof tally]++;
+const accepting = clinics.filter((c) => c.accepts_new === 'ano').slice(0, 5);
+
+const ld = [{
+  '@context': 'https://schema.org', '@type': 'WebSite', name: SITE.name, url: SITE.url, inLanguage: 'cs',
+  potentialAction: { '@type': 'SearchAction', target: `${SITE.url}/hledat?q={search_term_string}`, 'query-input': 'required name=search_term_string' },
+}];
+---
+<Layout
+  title="Zubaři, zubní kliniky a dentální hygiena v Moravskoslezském kraji"
+  description={`Přehled ${total} zubních ordinací, klinik a dentálních hygien v Moravskoslezském kraji. Zjistěte, kdo bere nové pacienty a na jaké pojišťovny, a přečtěte si recenze.`}
+  jsonLd={ld}>
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <h1>Najděte zubaře, který vás opravdu vezme.</h1>
+        <p class="lead">{total} zubních ordinací, klinik a dentálních hygien v Moravskoslezském kraji. Ke každé doplňujeme, jestli bere nové pacienty a se kterými pojišťovnami má smlouvu.</p>
+        <form class="search panel" action="/hledat" method="get" id="hero-search">
+          <div class="search-grid">
+            <div>
+              <label for="s-mesto">Město</label>
+              <select id="s-mesto" name="mesto">
+                <option value="">Celý kraj</option>
+                {cities.map((c) => <option value={c.slug}>{c.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label for="s-obor">Co potřebujete</label>
+              <select id="s-obor" name="obor">
+                <option value="">Cokoli</option>
+                {cats.map((c) => <option value={c.slug}>{c.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label for="s-poj">Pojišťovna</label>
+              <select id="s-poj" name="pojistovna">
+                <option value="">Jakákoli</option>
+                {INSURERS.map((i) => <option value={i.code}>{i.short} ({i.code})</option>)}
+              </select>
+            </div>
+          </div>
+          <div class="search-foot">
+            <label class="toggle"><input type="checkbox" name="nove" value="1" /> Jen ty, co berou nové pacienty</label>
+            <button class="btn" type="submit">Najít zubaře</button>
+          </div>
+        </form>
+      </div>
+
+      <aside class="board" aria-label="Kolik ordinací bere nové pacienty">
+        <h2 class="board-title">Příjem nových pacientů</h2>
+        <ul>
+          <li><StatusPill value="ano" /><strong>{tally.ano}</strong></li>
+          <li><StatusPill value="omezene" /><strong>{tally.omezene}</strong></li>
+          <li><StatusPill value="ne" /><strong>{tally.ne}</strong></li>
+          <li><StatusPill value={null} /><strong>{tally.nic}</strong></li>
+        </ul>
+        {accepting.length > 0 && (
+          <>
+            <p class="board-sub">Bere nové pacienty</p>
+            <ol class="board-list">
+              {accepting.map((c) => <li><a href={`/zubar/${c.slug}`}>{c.display_name}</a><span>{c.city_part || c.city}</span></li>)}
+            </ol>
+          </>
+        )}
+        <p class="small muted board-foot">Víte, že některá ordinace začala nebo přestala brát pacienty? <a href="/kontakt">Napište nám</a> – údaj ověříme a opravíme.</p>
+      </aside>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <h2>Zubaři podle měst</h2>
+      <ul class="places">
+        {cities.map((c) => <li><a href={`/mesto/${c.slug}`}>{c.name}<span class="n">{c.count}</span></a></li>)}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <h2>Podle toho, co potřebujete</h2>
+      <ul class="cats">
+        {cats.map((c) => (
+          <li>
+            <a href={`/obor/${c.slug}`}><strong>{c.name}</strong><span class="n">{c.count} {plural(c.count, 'ordinace', 'ordinace', 'ordinací')}</span></a>
+            <p class="muted small">{c.desc}</p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  {reviews.length > 0 && (
+    <section class="section">
+      <div class="wrap">
+        <h2>Nejnovější recenze pacientů</h2>
+        <ul class="reviews-mini">
+          {reviews.map((r) => (
+            <li class="panel">
+              <p class="small"><span class="stars" aria-label={`${r.rating} z 5`}>{'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}</span></p>
+              <p>{r.text.length > 220 ? r.text.slice(0, 220) + '…' : r.text}</p>
+              <p class="small muted">{r.author_name} o <a href={`/zubar/${r.clinic.slug}`}>{r.clinic.display_name}</a></p>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  )}
+
+  <section class="section">
+    <div class="wrap how">
+      <div>
+        <h2>Odkud údaje máme</h2>
+        <p>Seznam ordinací vychází z Národního registru poskytovatelů zdravotních služeb, takže v něm najdete i ordinace bez vlastního webu. Registr ale neříká, kdo bere nové pacienty ani na jaké pojišťovny – to doplňujeme od pacientů, z komunity {SITE.fbGroup} a přímo od ordinací. U každého údaje uvádíme, kdy jsme ho ověřili.</p>
+        <p><a href="/o-nas">Jak web funguje a jak řadíme ordinace</a></p>
+      </div>
+      <div class="note">
+        <h3>Máte ordinaci?</h3>
+        <p>Doplňte zdarma, jestli berete nové pacienty, pojišťovny a ordinační hodiny. Pacienti vás pak najdou přesně ve chvíli, kdy zubaře hledají.</p>
+        <a class="btn" href="/pro-zubare">Upravit údaje ordinace</a>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .hero { background: var(--surface); border-bottom: 1px solid var(--line); padding: 40px 0 48px; }
+  .hero-grid { display: grid; gap: 32px; }
+  @media (min-width: 960px) { .hero-grid { grid-template-columns: minmax(0, 1fr) 340px; align-items: start; gap: 56px; padding-top: 16px; } }
+  .hero h1 { max-width: 14ch; }
+  .search { margin-top: 28px; background: var(--paper); }
+  .search-grid { display: grid; gap: 14px; }
+  @media (min-width: 640px) { .search-grid { grid-template-columns: repeat(3, 1fr); } }
+  .search-foot { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; margin-top: 16px; }
+  .board { border: 1px solid var(--line); border-radius: var(--radius-m); padding: 22px; background: var(--paper); }
+  .board-title { font-size: 1.05rem; margin-bottom: 14px; }
+  .board ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+  .board ul li { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .board ul strong { font-size: 1.3rem; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+  .board-sub { font-weight: 700; margin: 20px 0 6px; font-size: 0.95rem; }
+  .board-list { margin: 0; padding: 0; list-style: none; }
+  .board-list li { display: flex; justify-content: space-between; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 0.93rem; }
+  .board-list span { color: var(--ink-3); white-space: nowrap; }
+  .board-foot { margin: 16px 0 0; }
+  .cats { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px 32px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+  .cats li { border-top: 1px solid var(--line); padding-top: 12px; }
+  .cats a { display: flex; justify-content: space-between; gap: 12px; color: var(--ink); text-decoration: none; font-size: 1.05rem; }
+  .cats a:hover strong { color: var(--brand); }
+  .cats .n { color: var(--ink-3); font-size: 0.92rem; }
+  .cats p { margin: 4px 0 12px; }
+  .reviews-mini { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); }
+  .reviews-mini p { margin-bottom: 8px; }
+  .how { display: grid; gap: 28px; }
+  @media (min-width: 900px) { .how { grid-template-columns: 1.4fr 1fr; align-items: start; } }
+</style>
+
+<script>
+  // S vybraným městem posíláme rovnou na stránku města (s filtry v adrese).
+  const f = document.getElementById('hero-search') as HTMLFormElement;
+  f.addEventListener('submit', (e) => {
+    const d = new FormData(f);
+    const mesto = String(d.get('mesto') || '');
+    if (!mesto) return;
+    e.preventDefault();
+    const q = new URLSearchParams();
+    for (const k of ['obor', 'pojistovna', 'nove']) { const v = d.get(k); if (v) q.set(k, String(v)); }
+    location.href = `/mesto/${mesto}${q.toString() ? '?' + q : ''}`;
+  });
+</script>

@@ -1,0 +1,20 @@
+---
+import Page from '../components/Page.astro';
+import ApiForms from '../components/ApiForms.astro';
+import Honeypot from '../components/Honeypot.astro';
+import { SITE } from '../lib/site';
+---
+<Page title="Kontakt" description="Napište nám – opravy údajů o ordinacích, informace o tom, kdo bere nové pacienty, spolupráce." crumb="Kontakt">
+  <h1>Kontakt</h1>
+  <p class="lead">Víte, že některá ordinace začala nebo přestala brát nové pacienty? Našli jste chybu? Napište nám, údaj ověříme a opravíme.</p>
+  <p>E-mail: <a href={`mailto:${SITE.contactEmail}`}>{SITE.contactEmail}</a></p>
+  <p>Jste z ordinace a chcete upravit její údaje? Použijte formulář na stránce <a href="/pro-zubare">Pro zubaře</a>.</p>
+  <form data-api="/api/report" class="panel" style="max-width:640px" data-ok="Děkujeme, zprávu máme.">
+    <input type="hidden" name="kind" value="data" />
+    <Honeypot />
+    <div class="field"><label for="k-msg">Zpráva</label><textarea id="k-msg" name="message" required minlength="5"></textarea></div>
+    <div class="field"><label for="k-mail">Váš e-mail (abychom mohli odpovědět)</label><input id="k-mail" name="email" type="email" autocomplete="email" /></div>
+    <button class="btn" type="submit">Odeslat zprávu</button>
+  </form>
+  <ApiForms />
+</Page>

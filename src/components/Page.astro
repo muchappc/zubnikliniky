@@ -1,0 +1,12 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Breadcrumbs from './Breadcrumbs.astro';
+interface Props { title: string; description: string; crumb?: string; noindex?: boolean }
+const { title, description, crumb, noindex } = Astro.props;
+---
+<Layout title={title} description={description} noindex={noindex}>
+  {crumb && <Breadcrumbs items={[{ name: crumb }]} />}
+  <section class="section" style="padding-top:20px">
+    <div class="wrap prose"><slot /></div>
+  </section>
+</Layout>

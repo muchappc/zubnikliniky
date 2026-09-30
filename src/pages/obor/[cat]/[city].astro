@@ -1,0 +1,35 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import Breadcrumbs from '../../../components/Breadcrumbs.astro';
+import ClinicList from '../../../components/ClinicList.astro';
+import { getCities, getParts } from '../../../lib/data';
+import { CATEGORIES, locative } from '../../../lib/taxonomy.mjs';
+import { summary } from '../../../lib/text';
+
+// Stránky „obor + město" vytváříme jen tam, kde jsou aspoň 2 ordinace (aby nevznikaly prázdné stránky).
+export async function getStaticPaths() {
+  const out = [];
+  for (const city of await getCities()) {
+    for (const cat of CATEGORIES) {
+      if (cat.slug === 'zubar') continue; // „zubař + město" = stránka města
+      const list = city.clinics.filter((c) => c.categories.includes(cat.slug));
+      if (list.length >= 2) out.push({ params: { cat: cat.slug, city: city.slug }, props: { cat, city: { name: city.name, slug: city.slug }, list, parts: await getParts(city.slug) } });
+    }
+  }
+  return out;
+}
+const { cat, city, list, parts } = Astro.props as any;
+const loc = locative(city.name);
+const usedParts = parts.filter((p: any) => list.some((c: any) => c.part_slug === p.slug));
+---
+<Layout title={`${cat.name} ${city.name}`} description={`${cat.name} ${loc}: ${list.length} ordinací. Kdo bere nové pacienty, pojišťovny, kontakty a recenze pacientů.`}>
+  <Breadcrumbs items={[{ name: city.name, href: `/mesto/${city.slug}` }, { name: cat.name }]} />
+  <section class="section" style="padding-top:20px">
+    <div class="wrap">
+      <h1>{cat.name} {loc}</h1>
+      <p class="lead">{cat.desc} {summary(list, loc)}</p>
+      <ClinicList clinics={list} parts={usedParts} catFilter={false} />
+      <p style="margin-top:24px"><a href={`/mesto/${city.slug}`}>Všechny zubní ordinace {loc}</a> · <a href={`/obor/${cat.slug}`}>{cat.name} v celém kraji</a></p>
+    </div>
+  </section>
+</Layout>

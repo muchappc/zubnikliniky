@@ -1,0 +1,26 @@
+{
+  "name": "zubnikliniky",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "import": "node scripts/import.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "csv-parse": "^7.0.3",
+    "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "^3.7.4",
+    "@astrojs/vercel": "^11.0.11",
+    "@supabase/supabase-js": "^2.117.2",
+    "astro": "^7.3.5"
+  },
+  "type": "module"
+}

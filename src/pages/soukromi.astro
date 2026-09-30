@@ -1,0 +1,23 @@
+---
+import Page from '../components/Page.astro';
+import { SITE } from '../lib/site';
+---
+<Page title="Ochrana osobních údajů" description="Jak zubnikliniky.cz zpracovává osobní údaje – recenze, poptávky termínů, formuláře pro ordinace." crumb="Ochrana osobních údajů">
+  <h1>Ochrana osobních údajů</h1>
+  <p>Správcem osobních údajů je {SITE.operator}, provozovatel webu {SITE.name}. Kontakt: <a href={`mailto:${SITE.contactEmail}`}>{SITE.contactEmail}</a>.</p>
+  <h2>Jaké údaje zpracováváme a proč</h2>
+  <ul>
+    <li><strong>Recenze:</strong> jméno nebo přezdívka (zveřejněno), e-mail (nezveřejněn – slouží k ověření recenze a ke kontaktu, pokud by recenze byla sporná), text a hodnocení. Právní základ: oprávněný zájem na provozu ověřených recenzí. Uchováváme po dobu zveřejnění recenze a 3 roky poté.</li>
+    <li><strong>Poptávka termínu:</strong> jméno, telefon, e-mail, pojišťovna a zpráva. Údaje předáme vybrané ordinaci, aby vás mohla objednat. Právní základ: váš souhlas. Uchováváme 12 měsíců.</li>
+    <li><strong>Formulář pro ordinace a kontaktní formulář:</strong> jméno, e-mail, telefon a obsah zprávy. Právní základ: oprávněný zájem a jednání o smlouvě. Uchováváme po dobu vyřízení a 3 roky poté.</li>
+    <li><strong>Ochrana proti spamu:</strong> z IP adresy ukládáme pouze jednosměrný otisk (hash), ze kterého nelze adresu zpětně zjistit.</li>
+  </ul>
+  <h2>Údaje o lékařích a ordinacích</h2>
+  <p>Jména lékařů a údaje o ordinacích přebíráme z veřejného Národního registru poskytovatelů zdravotních služeb. Pokud jste lékař a chcete údaje upravit nebo vznést námitku, napište nám.</p>
+  <h2>Cookies a měření návštěvnosti</h2>
+  <p>Web nepoužívá reklamní ani analytické cookies třetích stran. Počty zobrazení profilů a kliknutí na kontakty sčítáme anonymně po dnech, bez cookies a bez ukládání IP adres.</p>
+  <h2>Zpracovatelé</h2>
+  <p>Hosting webu: Vercel Inc. Databáze: Supabase (servery v EU). Odesílání e-mailů: Resend. Se všemi máme uzavřené smlouvy o zpracování osobních údajů v rámci jejich obchodních podmínek.</p>
+  <h2>Vaše práva</h2>
+  <p>Máte právo na přístup ke svým údajům, jejich opravu, výmaz, omezení zpracování, přenositelnost a vznést námitku. Souhlas můžete kdykoli odvolat. Stížnost můžete podat u Úřadu pro ochranu osobních údajů (uoou.gov.cz).</p>
+</Page>

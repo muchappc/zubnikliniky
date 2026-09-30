@@ -1,0 +1,25 @@
+---
+import Page from '../components/Page.astro';
+import { SITE } from '../lib/site';
+---
+<Page title="Podmínky použití" description="Podmínky používání webu zubnikliniky.cz a pravidla pro recenze." crumb="Podmínky použití">
+  <h1>Podmínky použití</h1>
+  <p>Platné od 1. 10. 2026. Provozovatelem webu {SITE.name} je {SITE.operator} (dále „provozovatel“).</p>
+  <h2>Informace na webu</h2>
+  <p>Údaje o ordinacích pocházejí z veřejného Národního registru poskytovatelů zdravotních služeb a z informací od ordinací a uživatelů. Snažíme se je udržovat aktuální, ale nemůžeme zaručit jejich úplnost a přesnost. Informace na webu nejsou zdravotnickou radou. Údaje o přijímání pacientů, pojišťovnách a ordinačních hodinách si vždy ověřte přímo v ordinaci.</p>
+  <h2>Pravidla pro recenze</h2>
+  <ul>
+    <li>Recenze musí popisovat vaši vlastní zkušenost (nebo zkušenost vašeho dítěte) s danou ordinací.</li>
+    <li>Recenze nesmí obsahovat vulgarity, urážky, výhrůžky, osobní údaje třetích osob, údaje o zdravotním stavu jiných lidí, reklamu ani odkazy.</li>
+    <li>Nepište recenze za úplatu, na objednávku ani o ordinaci, se kterou jste ve střetu zájmů (vlastní ordinace, konkurence, zaměstnanci).</li>
+    <li>Odesláním recenze potvrzujete, že je pravdivá, a udělujete provozovateli bezplatnou nevýhradní licenci k jejímu zveřejnění na webu.</li>
+    <li>Provozovatel může recenzi, která porušuje tato pravidla, skrýt nebo smazat. Recenze neodstraňujeme jen proto, že jsou negativní.</li>
+    <li>Ordinace má právo na recenzi veřejně odpovědět.</li>
+  </ul>
+  <h2>Poptávky termínů</h2>
+  <p>Poptávku předáváme vybrané ordinaci. Provozovatel nezprostředkovává zdravotní péči, nerozhoduje o přijetí pacienta a neodpovídá za to, zda a jak ordinace odpoví.</p>
+  <h2>Placené služby pro ordinace</h2>
+  <p>Ordinace si mohou objednat prémiový profil. Placené profily jsou na webu vždy označené a nemají vliv na pořadí ve výpisech ani na recenze.</p>
+  <h2>Kontakt</h2>
+  <p><a href={`mailto:${SITE.contactEmail}`}>{SITE.contactEmail}</a></p>
+</Page>

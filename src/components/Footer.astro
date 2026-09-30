@@ -1,0 +1,36 @@
+---
+import { getCities, getCategoryCounts } from '../lib/data';
+import { SITE } from '../lib/site';
+const cities = (await getCities()).slice(0, 8);
+const cats = await getCategoryCounts();
+const year = new Date().getFullYear();
+---
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <h3>zubnikliniky.cz</h3>
+        <p class="small" style="color:#9fb7b8">Přehled zubních ordinací, klinik a dentálních hygien v Moravskoslezském kraji. U každé ordinace se snažíme mít aktuální informaci, jestli bere nové pacienty.</p>
+      </div>
+      <div>
+        <h3>Města</h3>
+        <ul>{cities.map((c) => <li><a href={`/mesto/${c.slug}`}>Zubaři {c.name}</a></li>)}</ul>
+      </div>
+      <div>
+        <h3>Obory</h3>
+        <ul>{cats.map((c) => <li><a href={`/obor/${c.slug}`}>{c.name}</a></li>)}</ul>
+      </div>
+      <div>
+        <h3>Informace</h3>
+        <ul>
+          <li><a href="/o-nas">Jak to funguje</a></li>
+          <li><a href="/pro-zubare">Pro zubaře</a></li>
+          <li><a href="/kontakt">Kontakt</a></li>
+          <li><a href="/podminky">Podmínky použití</a></li>
+          <li><a href="/soukromi">Ochrana osobních údajů</a></li>
+        </ul>
+      </div>
+    </div>
+    <p class="footer-note">© {year} {SITE.name}. Základní údaje o ordinacích pocházejí z Národního registru poskytovatelů zdravotních služeb. Informace o přijímání pacientů a pojišťovnách ověřujeme průběžně – před návštěvou je vždy potvrďte přímo s ordinací.</p>
+  </div>
+</footer>

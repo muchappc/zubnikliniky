@@ -1,0 +1,96 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import ApiForms from '../components/ApiForms.astro';
+import Honeypot from '../components/Honeypot.astro';
+import { getClinics } from '../lib/data';
+import { SITE } from '../lib/site';
+const clinics = [...(await getClinics())].sort((a, b) => a.display_name.localeCompare(b.display_name, 'cs'));
+---
+<Layout title="Pro zubaře a dentální hygienistky" description="Upravte zdarma údaje své ordinace na zubnikliniky.cz – příjem nových pacientů, pojišťovny, ordinační hodiny. Prémiový profil s poptávkami pacientů přímo do e-mailu.">
+  <Breadcrumbs items={[{ name: 'Pro zubaře' }]} />
+  <section class="section" style="padding-top:20px">
+    <div class="wrap">
+      <h1>Pacienti vás hledají. Ať najdou správné údaje.</h1>
+      <p class="lead">Na zubnikliniky.cz je každá zubní ordinace a dentální hygiena z Moravskoslezského kraje, která je v Národním registru poskytovatelů. Nejčastější otázka pacientů je, jestli berete nové pacienty a na jakou pojišťovnu. Když to u vás bude aktuální, přijdou jen ti, které opravdu můžete vzít.</p>
+
+      <div class="tiers">
+        <div class="panel tier">
+          <h2>Základní profil</h2>
+          <p class="price">Zdarma</p>
+          <ul>
+            <li>Stav přijímání nových pacientů s datem ověření</li>
+            <li>Smluvní pojišťovny a ordinační hodiny</li>
+            <li>Telefon, e-mail a web</li>
+            <li>Odpovědi na recenze pacientů</li>
+            <li>Oprava zařazení do oborů a názvu ordinace</li>
+          </ul>
+        </div>
+        <div class="panel tier tier-premium">
+          <h2>Prémiový profil</h2>
+          <p class="price">{SITE.premiumPrice}<span class="muted small"> nebo {SITE.premiumPriceYear}</span></p>
+          <ul>
+            <li>Vše ze základního profilu</li>
+            <li>Poptávky termínů od pacientů chodí rovnou do vašeho e-mailu</li>
+            <li>Popis ordinace a až 5 fotografií</li>
+            <li>Výrazné označení ve výpisech a odkaz na váš web</li>
+            <li>Měsíční přehled: kolik lidí profil vidělo, klikalo na telefon a web a kolik poslalo poptávku</li>
+          </ul>
+        </div>
+      </div>
+      <p class="note small"><strong>Pořadí si koupit nelze.</strong> Ve výpisech řadíme podle toho, jestli ordinace bere nové pacienty, a podle hodnocení pacientů. Prémiový profil je jen vizuálně odlišený a jasně označený. Recenze nemažeme na přání – můžete na ně veřejně odpovědět, a pokud recenze porušuje pravidla, nahlaste ji.</p>
+
+      <h2 style="margin-top:48px" id="formular">Upravit údaje nebo objednat prémiový profil</h2>
+      <p class="muted">Ozveme se do dvou pracovních dnů. Změny údajů zveřejníme po krátkém ověření, že jste z dané ordinace.</p>
+      <form data-api="/api/claim" class="panel" data-ok="Děkujeme, žádost máme. Ozveme se vám do dvou pracovních dnů.">
+        <Honeypot />
+        <div class="field">
+          <label for="cl-clinic">Ordinace</label>
+          <input id="cl-clinic" name="clinic_name" list="clinic-options" required placeholder="Začněte psát název nebo jméno lékaře" />
+          <datalist id="clinic-options">{clinics.map((c) => <option value={`${c.display_name} – ${c.street}, ${c.city}`} data-slug={c.slug} />)}</datalist>
+          <input type="hidden" name="clinic_slug" id="cl-slug" />
+        </div>
+        <div class="field-row">
+          <div class="field"><label for="cl-name">Vaše jméno</label><input id="cl-name" name="contact_name" required autocomplete="name" /></div>
+          <div class="field"><label for="cl-role">Role v ordinaci</label><input id="cl-role" name="role" placeholder="lékař, sestra, recepce, manažer…" /></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label for="cl-email">E-mail</label><input id="cl-email" name="email" type="email" required autocomplete="email" /></div>
+          <div class="field"><label for="cl-phone">Telefon</label><input id="cl-phone" name="phone" type="tel" autocomplete="tel" /></div>
+        </div>
+        <div class="field">
+          <label for="cl-int">Co chcete udělat</label>
+          <select id="cl-int" name="interest">
+            <option value="udaje">Upravit údaje (zdarma)</option>
+            <option value="premium">Objednat prémiový profil</option>
+            <option value="odpoved">Odpovědět na recenzi</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="cl-msg">Co změnit nebo doplnit</label>
+          <textarea id="cl-msg" name="message" placeholder="Např. bereme nové pacienty od 1. 10., smlouvy s VZP, ČPZP a OZP, ordinujeme Po–Pá 7–15…"></textarea>
+        </div>
+        <button class="btn" type="submit">Odeslat žádost</button>
+      </form>
+    </div>
+  </section>
+  <ApiForms />
+</Layout>
+<style>
+  .tiers { display: grid; gap: 20px; margin: 32px 0 20px; }
+  @media (min-width: 800px) { .tiers { grid-template-columns: 1fr 1fr; } }
+  .tier h2 { font-size: 1.3rem; margin-bottom: 4px; }
+  .price { font-size: 1.5rem; font-weight: 750; letter-spacing: -0.02em; margin-bottom: 16px; }
+  .tier ul { margin: 0; padding-left: 1.1em; }
+  .tier li { margin-bottom: 8px; }
+  .tier-premium { border-color: #cbbcef; box-shadow: inset 4px 0 0 var(--premium); }
+</style>
+<script>
+  const input = document.getElementById('cl-clinic') as HTMLInputElement;
+  const slug = document.getElementById('cl-slug') as HTMLInputElement;
+  const opts = [...document.querySelectorAll<HTMLOptionElement>('#clinic-options option')];
+  const sync = () => { slug.value = opts.find((o) => o.value === input.value)?.dataset.slug ?? ''; };
+  input.addEventListener('change', sync);
+  const pre = new URLSearchParams(location.search).get('ordinace');
+  if (pre) { const o = opts.find((o) => o.dataset.slug === pre); if (o) { input.value = o.value; sync(); } }
+</script>

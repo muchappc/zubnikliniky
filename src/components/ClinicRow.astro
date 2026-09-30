@@ -1,0 +1,36 @@
+---
+import type { Clinic } from '../lib/data';
+import StatusPill from './StatusPill.astro';
+import { CATEGORY_BY_SLUG, INSURER_BY_CODE } from '../lib/taxonomy.mjs';
+interface Props { c: Clinic; km?: number | null }
+const { c, km } = Astro.props;
+---
+<li class="row"
+  data-premium={String(c.premium)}
+  data-cats={c.categories.join(' ')}
+  data-ins={c.insurers.join(' ')}
+  data-new={c.accepts_new ?? ''}
+  data-part={c.part_slug}
+  data-clinic={String(c.is_clinic)}>
+  <a href={`/zubar/${c.slug}`}>
+    <div>
+      <div class="row-name">{c.display_name}</div>
+      <div class="row-meta">
+        <span>{c.street}, {c.city_part && c.city_part !== c.city ? `${c.city} – ${c.city_part}` : c.city}</span>
+        {km != null && <span>{km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(1).replace('.', ',')} km`}</span>}
+      </div>
+      <div class="row-tags">
+        {c.categories.slice(0, 4).map((s) => <span class="tag">{CATEGORY_BY_SLUG[s]?.short ?? s}</span>)}
+        {c.is_clinic && <span class="tag">Klinika</span>}
+        {c.premium && <span class="tag tag-premium">Prémiový profil</span>}
+      </div>
+    </div>
+    <div class="row-side">
+      <StatusPill value={c.accepts_new} />
+      {c.insurers.length > 0 && <span class="small muted">{c.insurers.length === 7 ? 'Všechny pojišťovny' : c.insurers.map((i) => INSURER_BY_CODE[i]?.short ?? i).join(', ')}</span>}
+      {c.rating_count > 0
+        ? <span class="small"><span class="stars" aria-hidden="true">★</span> {c.rating_avg!.toFixed(1).replace('.', ',')} <span class="muted">({c.rating_count})</span></span>
+        : null}
+    </div>
+  </a>
+</li>
