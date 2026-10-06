@@ -18,10 +18,15 @@ Astro (statické stránky) + Supabase (databáze, přihlášení do administrace
 4. Authentication → URL Configuration → Site URL `https://www.zubnikliniky.cz`, do Redirect URLs přidej `https://www.zubnikliniky.cz/admin` a `https://*.vercel.app/admin`.
 
 ### 2. Import dat
+Nejjednodušší: SQL Editor → New query → vlož obsah `supabase/seed.sql` → Run (nahraje všech 671 ordinací).
+
+Pro budoucí aktualizace z nového CSV:
 ```bash
 npm install
 # CSV z Lovable (Cloud → Database → tabulka ordinací → Export CSV) ulož jako data/export.csv
-node scripts/import.mjs data/export.csv                 # jen zkontroluje a vytvoří data/clinics.json
+node scripts/import.mjs data/export.csv                 # vytvoří data/clinics.json
+node scripts/seed-sql.mjs                               # vytvoří supabase/seed.sql
+# nebo rovnou do databáze:
 SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... node scripts/import.mjs data/export.csv --push
 ```
 Skript sám rozpozná sloupce, opraví zobrazované názvy (bez „s.r.o.“, normální velikost písmen u jmen), odvodí všechny obory
