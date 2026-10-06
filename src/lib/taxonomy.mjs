@@ -11,21 +11,27 @@ export const CATEGORIES = [
 ];
 export const CATEGORY_BY_SLUG = Object.fromEntries(CATEGORIES.map((c) => [c.slug, c]));
 
-// Mapování textu oborů z NRPZS / exportu na naše kategorie.
+// Mapování oborů z NRPZS na naše kategorie. Porovnává se každý obor zvlášť a jen zubní obory –
+// nemocnice mají v registru desítky jiných oborů (obecná „chirurgie", „dětská chirurgie"…), ty ignorujeme.
 const CATEGORY_PATTERNS = [
-  ['dentalni-hygiena', /hygien/],
-  ['ortodoncie', /ortodon/],
-  ['chirurgie', /chirurg|maxilofac/],
-  ['parodontologie', /parodont/],
-  ['detska-stomatologie', /d[eě]tsk|pedostom|pedodon/],
-  ['implantologie', /implant/],
-  ['zubar', /zubn[ií] l[eé]ka|stomatolog|zub[aá]ř|protetik|zubn[ií] ordinace|^zubar$|zubni-lekar/],
+  ['dentalni-hygiena', /dent[aá]ln[ií] hygien/],
+  ['ortodoncie', /^ortodoncie$/],
+  ['chirurgie', /or[aá]ln[ií] a maxilofaci[aá]ln[ií] chirurgie|stomatochirurgie|dentoalveol[aá]rn[ií] chirurgie|zubn[ií] chirurgie|orální chirurgie/],
+  ['parodontologie', /parodontolog/],
+  ['detska-stomatologie', /d[eě]tsk[aá] stomatologie|pedostomatolog|d[eě]tsk[ée] zubn/],
+  ['implantologie', /implantolog/],
+  ['zubar', /zubn[ií] l[eé]ka[rř]stv[ií]|stomatologie|zubn[ií] l[eé]ka[rř]|zub[aá][rř]|^zubar$|zubni-lekar|zubn[ií] ordinace/],
 ];
 
+export function isDentalObor(term) {
+  const t = String(term || '').toLowerCase().trim();
+  return CATEGORY_PATTERNS.some(([, re]) => re.test(t)) || /zubn[ií] technik/.test(t);
+}
+
 export function categoriesFromText(text) {
-  const t = String(text || '').toLowerCase();
+  const terms = String(text || '').toLowerCase().split(/\s*[|,;]\s*/).map((x) => x.trim()).filter(Boolean);
   const out = new Set();
-  for (const [slug, re] of CATEGORY_PATTERNS) if (re.test(t)) out.add(slug);
+  for (const t of terms) for (const [slug, re] of CATEGORY_PATTERNS) if (re.test(t)) out.add(slug);
   return [...out];
 }
 

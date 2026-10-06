@@ -257,6 +257,7 @@ const desc = `${c.display_name} – ${mainCat?.name.toLowerCase() ?? 'zubní ord
   .d-grid { display: grid; gap: 28px; margin-top: 28px; grid-template-areas: 'status' 'side' 'main'; }
   .d-status { grid-area: status; } .d-main { grid-area: main; } .d-side { grid-area: side; }
   .d-main > .block:first-child { margin-top: 12px; }
+  @media (min-width: 960px) { .d-main > .block:first-child { margin-top: 40px; } }
   @media (min-width: 960px) {
     .d-grid { grid-template-columns: minmax(0, 1fr) 340px; grid-template-rows: auto 1fr; grid-template-areas: 'status side' 'main side'; gap: 0 48px; }
     .d-side { position: sticky; top: 16px; align-self: start; }

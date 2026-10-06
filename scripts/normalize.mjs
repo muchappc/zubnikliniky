@@ -1,6 +1,6 @@
 // Převod řádku z exportu (Lovable/Supabase CSV nebo NRPZS) na jednotný záznam ordinace.
 import {
-  categoriesFromText, PRIMARY_ORDER, OSTRAVA_PARTS_BY_ZIP, slugify, formatZip, formatPhone,
+  categoriesFromText, isDentalObor, PRIMARY_ORDER, OSTRAVA_PARTS_BY_ZIP, slugify, formatZip, formatPhone,
 } from '../src/lib/taxonomy.mjs';
 
 const ALIASES = {
@@ -79,13 +79,20 @@ export function displayName(legal) {
   s = s.replace(/,\s*(příspěvková organizace|státní příspěvková organizace).*$/i, '');
   // "Firma s.r.o., praktický lékař stomatolog" → "Firma s.r.o."
   s = s.replace(/,\s*(praktický lékař|zubní lékař|stomatolog|ordinace).*$/i, '');
-  s = s.replace(/^(MUDr\.|MDDr\.)(?=\S)/, '$1 ');
+  s = s.replace(/^(MUDr\.|MDDr\.)(?=[^\s,])/, '$1 ');
+  // "Nemocnice X a.s., ambulance" → "Nemocnice X"
+  s = s.replace(/[, ]+(s\.\s?r\.\s?o\.|a\.\s?s\.|spol\.\s?s\s?r\.\s?o\.)\s*,.*$/i, '');
   const hadLegal = LEGAL.test(s);
   s = s.replace(LEGAL, '').replace(/,\s*$/, '').trim();
   const words = s.split(' ');
   const hasTitle = words.some((w) => TITLES.test(w));
   const personLike = hasTitle || (!hadLegal && words.length >= 2 && words.length <= 3 && words.every((w) => /^[\p{Lu}][\p{L}-]+$/u.test(w)));
   if (personLike) return words.map(titleWord).join(' ');
+  // Celý název velkými písmeny ("DOKTOR ZOUBEK") → "Doktor Zoubek"; smíšené značky (AGEL, koprDENT) necháme.
+  const letters = words.filter((w) => /\p{L}{3,}/u.test(w));
+  if (letters.length && letters.every((w) => w === w.toLocaleUpperCase('cs'))) {
+    return words.map((w) => (/\p{L}{3,}/u.test(w) ? w.split('-').map((p) => p.charAt(0) + p.slice(1).toLocaleLowerCase('cs')).join('-') : w)).join(' ');
+  }
   return s;
 }
 
@@ -114,11 +121,12 @@ export function normalizeRow(row, h) {
   const oboryList = parseList(get('obory'));
   const typeRaw = String(get('type') || '');
   let cats = categoriesFromText([...oboryList, typeRaw.replace(/zubni-klinika/, '')].join(' | '));
+  const dentalObory = oboryList.filter(isDentalObor);
   if (!cats.length) cats = categoriesFromText(legal);
   if (!cats.length) cats = ['zubar'];
   cats.sort((a, b) => PRIMARY_ORDER.indexOf(a) - PRIMARY_ORDER.indexOf(b));
 
-  const isClinic = /klinik|clinic|centrum|poliklinik|nemocnic/i.test(legal) || /klinik/i.test(typeRaw) || cats.length >= 3;
+  const isClinic = /klinik|clinic|centrum|poliklinik|nemocnic/i.test(legal) || /klinik/i.test(typeRaw) || cats.length >= 3 || oboryList.length > dentalObory.length + 3;
 
   let lat = parseFloat(get('lat')), lng = parseFloat(get('lng'));
   if ((isNaN(lat) || isNaN(lng)) && get('gps')) {
@@ -139,7 +147,7 @@ export function normalizeRow(row, h) {
     display_name: String(get('display_name') || '').trim() || displayName(legal),
     categories: cats,
     is_clinic: isClinic,
-    obory_raw: oboryList.join(', '),
+    obory_raw: (dentalObory.length ? dentalObory : oboryList).map((o) => o.charAt(0).toLowerCase() + o.slice(1)).join(', '),
     street,
     zip: formatZip(zipRaw),
     city,

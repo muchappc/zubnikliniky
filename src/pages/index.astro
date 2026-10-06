@@ -13,6 +13,8 @@ const total = clinics.length;
 const tally = { ano: 0, omezene: 0, ne: 0, nic: 0 };
 for (const c of clinics) tally[(c.accepts_new ?? 'nic') as keyof typeof tally]++;
 const accepting = clinics.filter((c) => c.accepts_new === 'ano').slice(0, 5);
+const verified = tally.ano + tally.omezene + tally.ne;
+const topCities = cities.slice(0, 16);
 
 const ld = [{
   '@context': 'https://schema.org', '@type': 'WebSite', name: SITE.name, url: SITE.url, inLanguage: 'cs',
@@ -61,12 +63,23 @@ const ld = [{
 
       <aside class="board" aria-label="Kolik ordinací bere nové pacienty">
         <h2 class="board-title">Příjem nových pacientů</h2>
+        {verified === 0 ? (
+          <>
+            <p class="small">U každé ordinace postupně ověřujeme, jestli bere nové pacienty. Výsledek uvidíte přímo u ní:</p>
+            <ul>
+              <li><StatusPill value="ano" /></li>
+              <li><StatusPill value="omezene" /></li>
+              <li><StatusPill value="ne" /></li>
+            </ul>
+          </>
+        ) : (
         <ul>
           <li><StatusPill value="ano" /><strong>{tally.ano}</strong></li>
           <li><StatusPill value="omezene" /><strong>{tally.omezene}</strong></li>
           <li><StatusPill value="ne" /><strong>{tally.ne}</strong></li>
           <li><StatusPill value={null} /><strong>{tally.nic}</strong></li>
         </ul>
+        )}
         {accepting.length > 0 && (
           <>
             <p class="board-sub">Bere nové pacienty</p>
@@ -84,8 +97,9 @@ const ld = [{
     <div class="wrap">
       <h2>Zubaři podle měst</h2>
       <ul class="places">
-        {cities.map((c) => <li><a href={`/mesto/${c.slug}`}>{c.name}<span class="n">{c.count}</span></a></li>)}
+        {topCities.map((c) => <li><a href={`/mesto/${c.slug}`}>{c.name}<span class="n">{c.count}</span></a></li>)}
       </ul>
+      {cities.length > topCities.length && <p style="margin-top:16px"><a href="/mesta">Všech {cities.length} měst a obcí</a></p>}
     </div>
   </section>
 
