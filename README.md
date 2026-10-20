@@ -7,14 +7,14 @@ Astro (statické stránky) + Supabase (databáze, přihlášení do administrace
 - Všechny veřejné stránky (města, části Ostravy, obory, detail ordinace) se **generují při buildu** z databáze → rychlé a dobře indexovatelné.
 - Formuláře (recenze, poptávka termínu, nahlášení, žádost ordinace) jdou na `/api/*` (serverless funkce na Vercelu).
 - Po potvrzení recenze e-mailem nebo po kliknutí na **Zveřejnit změny** v administraci se spustí nový build (Deploy Hook), web se aktualizuje za 1–2 minuty.
-- Administrace: `/admin`, přihlášení přes Google. **První přihlášený účet se stane správcem** – přihlas se hned po nasazení.
+- Administrace: `/admin`, přihlášení odkazem z e-mailu. **První přihlášený účet se stane správcem** – přihlas se hned po nasazení.
 
 ## Spuštění krok za krokem
 
 ### 1. Supabase
 1. Na supabase.com založ projekt (region EU – Frankfurt).
 2. SQL Editor → vlož obsah `supabase/schema.sql` → Run.
-3. Authentication → Providers → **Google** zapnout (Client ID/Secret z Google Cloud Console → OAuth consent + OAuth Client „Web application“; do „Authorized redirect URIs“ vlož callback URL, kterou ukazuje Supabase).
+3. Přihlášení do administrace je odkazem z e-mailu (Supabase → Authentication → Providers → Email musí být zapnuté, výchozí stav).
 4. Authentication → URL Configuration → Site URL `https://www.zubnikliniky.cz`, do Redirect URLs přidej `https://www.zubnikliniky.cz/admin` a `https://*.vercel.app/admin`.
 
 ### 2. Import dat
@@ -42,7 +42,7 @@ resend.com → Domains → přidat `zubnikliniky.cz` → DNS záznamy (SPF/DKIM)
 3. Settings → Git → Deploy Hooks → vytvořit hook (větev `main`) → URL vložit jako `VERCEL_DEPLOY_HOOK_URL` → Redeploy.
 4. Settings → Domains → přidat `www.zubnikliniky.cz` a `zubnikliniky.cz` (přesměrování na www). U svethostingu nastavit
    `CNAME www → cname.vercel-dns.com` a `A @ → 76.76.21.21` (přesné hodnoty ukáže Vercel).
-5. Otevři `/admin`, přihlas se Googlem → jsi správce.
+5. Otevři `/admin`, zadej svůj e-mail, klikni na odkaz v e-mailu → jsi správce.
 
 ## Lokální vývoj
 ```bash
