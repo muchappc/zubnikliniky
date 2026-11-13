@@ -7,7 +7,7 @@ Astro (statické stránky) + Supabase (databáze, přihlášení do administrace
 - Všechny veřejné stránky (města, části Ostravy, obory, detail ordinace) se **generují při buildu** z databáze → rychlé a dobře indexovatelné.
 - Formuláře (recenze, poptávka termínu, nahlášení, žádost ordinace) jdou na `/api/*` (serverless funkce na Vercelu).
 - Po potvrzení recenze e-mailem nebo po kliknutí na **Zveřejnit změny** v administraci se spustí nový build (Deploy Hook), web se aktualizuje za 1–2 minuty.
-- Administrace: `/admin`, přihlášení odkazem z e-mailu. **První přihlášený účet se stane správcem** – přihlas se hned po nasazení.
+- Administrace: `/admin`, přihlášení odkazem z e-mailu. Správcem se stane jen účet, jehož e-mail je v `private.admin_emails` (viz `supabase/admin-allowlist.sql`).
 
 ## Spuštění krok za krokem
 
