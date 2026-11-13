@@ -7,9 +7,16 @@ const env = (k: string) => process.env[k] ?? (import.meta.env as any)[k] ?? '';
 let _sb: SupabaseClient | null = null;
 export function db() {
   if (!_sb) {
-    const url = env('SUPABASE_URL'), key = env('SUPABASE_SERVICE_ROLE_KEY');
-    if (!url || !key) throw new HttpError(503, 'Služba zatím není nastavená. Zkuste to prosím později.');
-    _sb = createClient(url, key, { auth: { persistSession: false } });
+    // Web se k databázi hlásí veřejným klíčem + vlastním tajným „serverovým klíčem" v hlavičce
+    // (viz supabase/server-key.sql). Alternativně lze použít service role klíč.
+    const url = env('SUPABASE_URL') || env('PUBLIC_SUPABASE_URL');
+    const service = env('SUPABASE_SERVICE_ROLE_KEY'), serverKey = env('SUPABASE_SERVER_KEY');
+    const key = service || env('PUBLIC_SUPABASE_ANON_KEY');
+    if (!url || !key || (!service && !serverKey)) throw new HttpError(503, 'Služba zatím není nastavená. Zkuste to prosím později.');
+    _sb = createClient(url, key, {
+      auth: { persistSession: false },
+      global: service ? {} : { headers: { 'x-server-key': serverKey } },
+    });
   }
   return _sb;
 }

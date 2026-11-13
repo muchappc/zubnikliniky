@@ -55,12 +55,14 @@ let cache: { clinics: Clinic[]; reviews: Review[] } | null = null;
 
 async function load() {
   if (cache) return cache;
-  const url = import.meta.env.SUPABASE_URL ?? process.env.SUPABASE_URL;
-  const key = import.meta.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const e = (k: string) => (import.meta.env as any)[k] ?? process.env[k] ?? '';
+  const url = e('SUPABASE_URL') || e('PUBLIC_SUPABASE_URL');
+  const service = e('SUPABASE_SERVICE_ROLE_KEY'), serverKey = e('SUPABASE_SERVER_KEY');
+  const key = service || (serverKey ? e('PUBLIC_SUPABASE_ANON_KEY') : '');
   let rawClinics: any[] = [];
   let reviews: Review[] = [];
   if (url && key) {
-    const sb = createClient(url, key, { auth: { persistSession: false } });
+    const sb = createClient(url, key, { auth: { persistSession: false }, global: service ? {} : { headers: { 'x-server-key': serverKey } } });
     const all: any[] = [];
     for (let from = 0; ; from += 1000) {
       const { data, error } = await sb.from('clinics').select('*').eq('hidden', false).range(from, from + 999);
@@ -77,7 +79,7 @@ async function load() {
     if (re) throw re;
     reviews = rv as Review[];
   } else {
-    if (process.env.VERCEL) throw new Error('Chybí SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY – build na Vercelu by jinak zveřejnil zkušební data.');
+    if (process.env.VERCEL) throw new Error('Chybí PUBLIC_SUPABASE_URL / PUBLIC_SUPABASE_ANON_KEY / SUPABASE_SERVER_KEY – build na Vercelu by jinak zveřejnil zkušební data.');
     const file = path.resolve('data/clinics.json');
     rawClinics = JSON.parse(fs.readFileSync(file, 'utf8')).filter((c: any) => !c.hidden);
     rawClinics.forEach((c: any, i: number) => (c.id = c.id || `local-${i}`));
@@ -174,5 +176,5 @@ export async function getNearby(c: Clinic, n = 5) {
 }
 
 export function isDataSample() {
-  return !(import.meta.env.SUPABASE_URL ?? process.env.SUPABASE_URL);
+  return !(import.meta.env.PUBLIC_SUPABASE_URL ?? process.env.PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL);
 }

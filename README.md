@@ -13,7 +13,7 @@ Astro (statické stránky) + Supabase (databáze, přihlášení do administrace
 
 ### 1. Supabase
 1. Na supabase.com založ projekt (region EU – Frankfurt).
-2. SQL Editor → vlož obsah `supabase/schema.sql` → Run.
+2. SQL Editor → vlož obsah `supabase/schema.sql` → Run, potom `supabase/server-key.sql` → Run a nakonec vlož otisk serverového klíče (postup je v komentáři toho souboru).
 3. Přihlášení do administrace je odkazem z e-mailu (Supabase → Authentication → Providers → Email musí být zapnuté, výchozí stav).
 4. Authentication → URL Configuration → Site URL `https://www.zubnikliniky.cz`, do Redirect URLs přidej `https://www.zubnikliniky.cz/admin` a `https://*.vercel.app/admin`.
 
