@@ -78,7 +78,7 @@ const escapeHtml = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '
 // Odeslání e-mailu přes Resend (https://resend.com). Bez klíče jen zaloguje.
 export async function sendMail(opts: { to: string | string[]; subject: string; text: string; replyTo?: string }) {
   const key = env('RESEND_API_KEY');
-  const from = env('MAIL_FROM') || 'zubnikliniky.cz <info@zubnikliniky.cz>';
+  const from = env('MAIL_FROM') || 'zubnikliniky.cz <leady@zubnikliniky.cz>';
   if (!key) { console.warn('[mail] RESEND_API_KEY chybí, e-mail neodeslán:', opts.subject, opts.to); return false; }
   const html = `<div style="font-family:system-ui,sans-serif;font-size:15px;line-height:1.55;color:#0f2e35;max-width:560px">${escapeHtml(opts.text)
     .replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" style="color:#0b6f70">$1</a>')
