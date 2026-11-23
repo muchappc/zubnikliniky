@@ -11,7 +11,6 @@ import { SITE } from '../../lib/site';
 const entry =   [7, 5, 7, 6, 2, 3, 9, 8, 6, 4, 4, 6, 4, 2, 3, 2, 2, 7, 2, 4, 3];
 const hygiene = [0, 2, 1, 0, 2, 1, 2, 0, 0, 2, 1, 0, 2, 2, 0, 0, 0, 1, 2, 2, 0];
 const total = [...entry, ...hygiene].reduce((a, b) => a + b, 0);
-const phone = '724 554 244';
 ---
 <Layout
   title="Případová studie: soukromá klinika v Ostravě s obsazenými termíny na 3 měsíce dopředu"
@@ -29,9 +28,8 @@ const phone = '724 554 244';
         <p class="lead">Soukromé zubní klinice v Ostravě jsem spustil reklamu na Facebooku a Instagramu. Za tři týdny měla <strong>{total} poptávek</strong> od nových pacientů a volné termíny zaplnila na 3 měsíce dopředu.</p>
         <div class="cta-row">
           <a class="btn btn-lg" href="#formular">Chci nové pacienty i do své ordinace →</a>
-          <a class="btn btn-ghost" href={`tel:+420${phone.replace(/\s/g, '')}`}>📞 {phone}</a>
         </div>
-        <p class="small muted trust">✅ Nezávazná konzultace zdarma · ✅ Ozvu se do 2 pracovních dnů · ✅ Mluvíte přímo se mnou, ne s agenturou</p>
+        <p class="small muted trust">✅ Nezávazná nabídka · ✅ Ozvu se do 2 pracovních dnů · ✅ Mluvíte přímo se mnou, ne s agenturou</p>
       </div>
       <CaseHero />
     </div>
@@ -97,7 +95,7 @@ const phone = '724 554 244';
       <div class="panel">
         <h2 class="h3">🤝 Jak spolupráce probíhá</h2>
         <ol class="flow">
-          <li><strong>Krátký hovor.</strong> Zjistím, co nabízíte, koho chcete oslovit a kolik pacientů zvládnete vzít.</li>
+          <li><strong>Napíšete mi.</strong> Přes formulář níže. Doptám se, co nabízíte, koho chcete oslovit a kolik pacientů zvládnete vzít.</li>
           <li><strong>Návrh kampaně.</strong> Připravím nabídku, texty a grafiku a pošlu vám je ke schválení.</li>
           <li><strong>Spuštění a řízení.</strong> Kampaně průběžně ladím a dávám vám přehled, kolik poptávek přišlo.</li>
         </ol>
@@ -112,7 +110,7 @@ const phone = '724 554 244';
   <section class="section">
     <div class="wrap narrow">
       <h2>❓ Časté otázky</h2>
-      <details class="panel faq"><summary>Kolik to stojí?</summary><p>Záleží na tom, co a v jakém rozsahu chcete propagovat. Po krátkém hovoru vám pošlu konkrétní nabídku. Rozpočet na samotnou reklamu si určujete vy a můžete ho kdykoli změnit.</p></details>
+      <details class="panel faq"><summary>Kolik to stojí?</summary><p>Záleží na tom, co a v jakém rozsahu chcete propagovat. Napište mi přes formulář a pošlu vám konkrétní nabídku. Rozpočet na samotnou reklamu si určujete vy a můžete ho kdykoli změnit.</p></details>
       <details class="panel faq"><summary>Jak rychle přijdou první poptávky?</summary><p>V této případovce přišly první poptávky hned v den spuštění. Obecně to slíbit nemůžu, ale formulářová reklama obvykle ukáže během prvních dnů, jestli nabídka funguje.</p></details>
       <details class="panel faq"><summary>Potřebuji vlastní reklamní účet na Facebooku?</summary><p>Doporučuji, aby reklamní účet patřil vám a já k němu měl přístup jako partner. Pomůžu vám ho založit. Účet i data tak zůstanou vaše, ať spolupráce dopadne jakkoli.</p></details>
       <details class="panel faq"><summary>Co když se nám kapacita zaplní?</summary><p>Kampaň pozastavím, přesně jako v této případovce. Neplatíte za zájemce, které nemůžete vzít, a kampaň jde kdykoli znovu zapnout.</p></details>
@@ -124,7 +122,7 @@ const phone = '724 554 244';
     <div class="wrap narrow">
       <div class="panel form-box">
         <h2 id="formular">🚀 Chcete podobný výsledek pro svou ordinaci?</h2>
-        <p class="muted">Napište mi pár slov o ordinaci. Ozvu se do dvou pracovních dnů a navrhnu, jak by kampaň mohla vypadat u vás. Nebo rovnou zavolejte na <a href={`tel:+420${phone.replace(/\s/g, '')}`}>{phone}</a>.</p>
+        <p class="muted">Napište mi pár slov o ordinaci. Ozvu se do dvou pracovních dnů a navrhnu, jak by kampaň mohla vypadat u vás. Raději e-mailem? Pište na <a class="js-mail" data-u="info" data-d="zubnikliniky.cz" href="#formular">e-mail zobrazíte kliknutím</a>.</p>
         <form data-api="/api/marketing" data-ok="Děkuji, zprávu mám. Ozvu se vám do dvou pracovních dnů.">
           <Honeypot />
           <input type="hidden" name="source" value="pripadova-studie" />
@@ -141,7 +139,7 @@ const phone = '724 554 244';
             <label for="mk-msg">Co potřebujete</label>
             <textarea id="mk-msg" name="message" placeholder="Např. otevřeli jsme v září, máme volnou kapacitu na hygienu a chceme nové pacienty z Poruby a okolí…"></textarea>
           </div>
-          <button class="btn btn-lg" type="submit">Chci nezávaznou konzultaci</button>
+          <button class="btn btn-lg" type="submit">Chci nezávaznou nabídku</button>
           <p class="small muted" style="margin-top:12px">Údaje použiju jen k tomu, abych se vám ozval. Žádný newsletter.</p>
         </form>
       </div>
@@ -152,6 +150,14 @@ const phone = '724 554 244';
   <a class="sticky-cta btn" href="#formular">Chci nové pacienty →</a>
   <ApiForms />
 </Layout>
+<script>
+  // E-mail se skládá až v prohlížeči, v HTML není celý – ochrana proti robotům sbírajícím adresy.
+  document.querySelectorAll<HTMLAnchorElement>('a.js-mail').forEach((a) => {
+    const addr = `${a.dataset.u}@${a.dataset.d}`;
+    a.href = `mailto:${addr}`;
+    a.textContent = addr;
+  });
+</script>
 <style>
   .hero { padding-top: 16px; }
   .hero-grid { display: grid; gap: 32px; align-items: center; }
