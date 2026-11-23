@@ -1,0 +1,196 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import ApiForms from '../../components/ApiForms.astro';
+import Honeypot from '../../components/Honeypot.astro';
+import CaseHero from '../../components/CaseHero.astro';
+import LeadsChart from '../../components/LeadsChart.astro';
+import { SITE } from '../../lib/site';
+
+// Denní počty poptávek z Meta Ads (3.–23. 11. 2026)
+const entry =   [7, 5, 7, 6, 2, 3, 9, 8, 6, 4, 4, 6, 4, 2, 3, 2, 2, 7, 2, 4, 3];
+const hygiene = [0, 2, 1, 0, 2, 1, 2, 0, 0, 2, 1, 0, 2, 2, 0, 0, 0, 1, 2, 2, 0];
+const total = [...entry, ...hygiene].reduce((a, b) => a + b, 0);
+const phone = '724 554 244';
+---
+<Layout
+  title="Případová studie: soukromá klinika v Ostravě s obsazenými termíny na 3 měsíce dopředu"
+  description={`Jak jsem soukromé zubní klinice v Ostravě za tři týdny přivedl ${total} poptávek nových pacientů z reklamy na Facebooku a Instagramu.`}
+  noindex
+>
+  <Breadcrumbs items={[{ name: 'Pro zubaře', href: '/pro-zubare' }, { name: 'Případová studie' }]} />
+
+  <!-- HERO -->
+  <section class="section hero">
+    <div class="wrap hero-grid">
+      <div>
+        <p class="eyebrow">📈 Případová studie · listopad 2026</p>
+        <h1>Za tři týdny obsazené termíny na 3 měsíce dopředu</h1>
+        <p class="lead">Soukromé zubní klinice v Ostravě jsem spustil reklamu na Facebooku a Instagramu. Za tři týdny měla <strong>{total} poptávek</strong> od nových pacientů a volné termíny zaplnila na 3 měsíce dopředu.</p>
+        <div class="cta-row">
+          <a class="btn btn-lg" href="#formular">Chci nové pacienty i do své ordinace →</a>
+          <a class="btn btn-ghost" href={`tel:+420${phone.replace(/\s/g, '')}`}>📞 {phone}</a>
+        </div>
+        <p class="small muted trust">✅ Nezávazná konzultace zdarma · ✅ Ozvu se do 2 pracovních dnů · ✅ Mluvíte přímo se mnou, ne s agenturou</p>
+      </div>
+      <CaseHero />
+    </div>
+  </section>
+
+  <!-- ČÍSLA -->
+  <section class="section tight">
+    <div class="wrap stats">
+      <div class="panel stat"><span class="emoji" aria-hidden="true">📩</span><span class="num">{total}</span><span class="muted small">poptávek od lidí z Ostravy a okolí</span></div>
+      <div class="panel stat"><span class="emoji" aria-hidden="true">⏱️</span><span class="num">3 týdny</span><span class="muted small">od spuštění do zaplnění kapacity</span></div>
+      <div class="panel stat"><span class="emoji" aria-hidden="true">💸</span><span class="num">≈ 26 Kč</span><span class="muted small">průměrně za jednu poptávku</span></div>
+      <div class="panel stat"><span class="emoji" aria-hidden="true">🗓️</span><span class="num">3 měsíce</span><span class="muted small">dopředu obsazené termíny pro nové pacienty</span></div>
+    </div>
+  </section>
+
+  <!-- GRAF -->
+  <section class="section tight">
+    <div class="wrap">
+      <LeadsChart entry={entry} hygiene={hygiene} startDay={3} month={11} />
+    </div>
+  </section>
+
+  <!-- PŘÍBĚH -->
+  <section class="section">
+    <div class="wrap narrow">
+      <h2>🦷 Výchozí situace</h2>
+      <p>Klinika nemá smlouvy se zdravotními pojišťovnami a pacienti si péči platí sami. Lidi, kteří hledají zubaře „na pojišťovnu“, to odradí. Pro tuhle kliniku to ale byla výhoda: stačilo oslovit ty, kdo jsou ochotní si za kvalitní péči zaplatit, a dát jim konkrétní důvod přijít.</p>
+
+      <h2>🛠️ Co jsem udělal</h2>
+    </div>
+    <div class="wrap steps">
+      <div class="panel step"><span class="emoji" aria-hidden="true">🎯</span><h3>Dvě jasné nabídky</h3><p>Místo obecné reklamy zvýhodněná vstupní prohlídka pro nové pacienty a dentální hygiena za pevnou cenu. Člověk hned ví, co dostane a kolik zaplatí.</p></div>
+      <div class="panel step"><span class="emoji" aria-hidden="true">📱</span><h3>Formulář přímo v reklamě</h3><p>Zájemce nemusí nikam přecházet ani volat. Na Facebooku nebo Instagramu vyplní jméno a telefon a recepce se mu ozve.</p></div>
+      <div class="panel step"><span class="emoji" aria-hidden="true">📍</span><h3>Jen Ostrava a okolí</h3><p>Reklamu viděli lidé do 25 km od kliniky, a to na mobilu, kde ji reálně zaregistrují a hned zareagují.</p></div>
+      <div class="panel step"><span class="emoji" aria-hidden="true">🔁</span><h3>Testování a řízení</h3><p>Zkoušel jsem několik verzí textu a grafiky a rozpočet přesouval tam, kde poptávky vycházely nejlevněji. Jakmile se termíny zaplnily, vstupní nabídku jsem po domluvě s klinikou pozastavil.</p></div>
+    </div>
+  </section>
+
+  <!-- VÝSLEDEK -->
+  <section class="section">
+    <div class="wrap narrow">
+      <h2>🏆 Výsledek</h2>
+      <p>Za tři týdny přišlo <strong>{total} poptávek</strong>: 96 na vstupní prohlídku a 20 na dentální hygienu. Jedna poptávka vyšla průměrně zhruba na 26 Kč. Klinika má termíny pro nové pacienty obsazené na 3 měsíce dopředu. Kampaň na vstupní prohlídku jsem proto zastavil, aby klinika neplatila za zájemce, které by stejně nemohla vzít. Hygiena běží dál, protože na ni kapacita zůstala.</p>
+
+      <div class="note honest">
+        <p><strong>💬 Férově k číslům</strong></p>
+        <p class="small">Poptávka ještě není pacient. Pacientem se stane, až se mu ordinace ozve a domluví termín. Výsledek pokaždé závisí na nabídce, ceně, lokalitě a na tom, jak rychle ordinace zájemce kontaktuje. Konkrétní počet pacientů vám garantovat neumím a nebudu. Umím ale nastavit a vést kampaně tak, aby se k vám dostali lidé, kteří o vaši péči opravdu stojí.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRO KOHO + JAK TO PROBÍHÁ -->
+  <section class="section">
+    <div class="wrap two-col">
+      <div class="panel">
+        <h2 class="h3">👩‍⚕️ Pro koho to dává smysl</h2>
+        <ul class="checks">
+          <li>Nově otevřené ordinace a hygieny, které potřebují rychle zaplnit kalendář</li>
+          <li>Soukromé kliniky, které chtějí oslovit pacienty ochotné si za péči zaplatit</li>
+          <li>Ordinace s volnou kapacitou na konkrétní službu, třeba hygienu nebo implantáty</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h2 class="h3">🤝 Jak spolupráce probíhá</h2>
+        <ol class="flow">
+          <li><strong>Krátký hovor.</strong> Zjistím, co nabízíte, koho chcete oslovit a kolik pacientů zvládnete vzít.</li>
+          <li><strong>Návrh kampaně.</strong> Připravím nabídku, texty a grafiku a pošlu vám je ke schválení.</li>
+          <li><strong>Spuštění a řízení.</strong> Kampaně průběžně ladím a dávám vám přehled, kolik poptávek přišlo.</li>
+        </ol>
+      </div>
+    </div>
+    <div class="wrap narrow">
+      <p class="muted">Kromě reklamy na Facebooku a Instagramu nabízím i propagaci ve skupině „{SITE.fbGroup}“, kde je přes 34 000 lidí z Ostravy a okolí, kteří hledají zubaře.</p>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="section">
+    <div class="wrap narrow">
+      <h2>❓ Časté otázky</h2>
+      <details class="panel faq"><summary>Kolik to stojí?</summary><p>Záleží na tom, co a v jakém rozsahu chcete propagovat. Po krátkém hovoru vám pošlu konkrétní nabídku. Rozpočet na samotnou reklamu si určujete vy a můžete ho kdykoli změnit.</p></details>
+      <details class="panel faq"><summary>Jak rychle přijdou první poptávky?</summary><p>V této případovce přišly první poptávky hned v den spuštění. Obecně to slíbit nemůžu, ale formulářová reklama obvykle ukáže během prvních dnů, jestli nabídka funguje.</p></details>
+      <details class="panel faq"><summary>Potřebuji vlastní reklamní účet na Facebooku?</summary><p>Doporučuji, aby reklamní účet patřil vám a já k němu měl přístup jako partner. Pomůžu vám ho založit. Účet i data tak zůstanou vaše, ať spolupráce dopadne jakkoli.</p></details>
+      <details class="panel faq"><summary>Co když se nám kapacita zaplní?</summary><p>Kampaň pozastavím, přesně jako v této případovce. Neplatíte za zájemce, které nemůžete vzít, a kampaň jde kdykoli znovu zapnout.</p></details>
+    </div>
+  </section>
+
+  <!-- FORMULÁŘ -->
+  <section class="section">
+    <div class="wrap narrow">
+      <div class="panel form-box">
+        <h2 id="formular">🚀 Chcete podobný výsledek pro svou ordinaci?</h2>
+        <p class="muted">Napište mi pár slov o ordinaci. Ozvu se do dvou pracovních dnů a navrhnu, jak by kampaň mohla vypadat u vás. Nebo rovnou zavolejte na <a href={`tel:+420${phone.replace(/\s/g, '')}`}>{phone}</a>.</p>
+        <form data-api="/api/marketing" data-ok="Děkuji, zprávu mám. Ozvu se vám do dvou pracovních dnů.">
+          <Honeypot />
+          <input type="hidden" name="source" value="pripadova-studie" />
+          <div class="field">
+            <label for="mk-clinic">Ordinace</label>
+            <input id="mk-clinic" name="clinic_name" required placeholder="Název ordinace a město" />
+          </div>
+          <div class="field-row">
+            <div class="field"><label for="mk-name">Vaše jméno</label><input id="mk-name" name="contact_name" required autocomplete="name" /></div>
+            <div class="field"><label for="mk-phone">Telefon</label><input id="mk-phone" name="phone" type="tel" autocomplete="tel" /></div>
+          </div>
+          <div class="field"><label for="mk-email">E-mail</label><input id="mk-email" name="email" type="email" required autocomplete="email" /></div>
+          <div class="field">
+            <label for="mk-msg">Co potřebujete</label>
+            <textarea id="mk-msg" name="message" placeholder="Např. otevřeli jsme v září, máme volnou kapacitu na hygienu a chceme nové pacienty z Poruby a okolí…"></textarea>
+          </div>
+          <button class="btn btn-lg" type="submit">Chci nezávaznou konzultaci</button>
+          <p class="small muted" style="margin-top:12px">Údaje použiju jen k tomu, abych se vám ozval. Žádný newsletter.</p>
+        </form>
+      </div>
+      <p class="small muted signature">Martin Mucha · marketing pro zubní ordinace · {SITE.operator}</p>
+    </div>
+  </section>
+
+  <a class="sticky-cta btn" href="#formular">Chci nové pacienty →</a>
+  <ApiForms />
+</Layout>
+<style>
+  .hero { padding-top: 16px; }
+  .hero-grid { display: grid; gap: 32px; align-items: center; }
+  @media (min-width: 900px) { .hero-grid { grid-template-columns: 1.1fr 0.9fr; } }
+  .hero h1 { font-size: clamp(2rem, 4.4vw, 3.1rem); line-height: 1.08; letter-spacing: -0.03em; margin: 10px 0 16px; }
+  .eyebrow { display: inline-block; font-weight: 650; font-size: 0.9rem; color: var(--brand); background: var(--brand-soft); padding: 5px 12px; border-radius: 999px; margin: 0; }
+  .cta-row { display: flex; flex-wrap: wrap; gap: 12px; margin: 26px 0 14px; }
+  .btn-lg { padding: 15px 26px; font-size: 1.05rem; box-shadow: 0 8px 20px -8px rgba(11, 111, 112, 0.55); }
+  .trust { margin: 0; }
+  .section.tight { padding: 12px 0; }
+  .stats { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+  .stat { display: flex; flex-direction: column; gap: 4px; }
+  .emoji { font-size: 1.6rem; line-height: 1; }
+  .num { font-size: 1.75rem; font-weight: 800; letter-spacing: -0.02em; color: var(--brand); margin-top: 6px; }
+  .narrow { max-width: 780px; }
+  .narrow h2 { margin-top: 0.4em; }
+  .narrow p { max-width: 68ch; }
+  .steps { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); margin-top: 8px; }
+  .step h3 { font-size: 1.08rem; margin: 10px 0 6px; }
+  .step p { margin: 0; color: var(--ink-2); font-size: 0.96rem; }
+  .honest { margin-top: 20px; }
+  .honest p { margin: 0 0 6px; }
+  .two-col { display: grid; gap: 14px; margin-bottom: 20px; }
+  @media (min-width: 860px) { .two-col { grid-template-columns: 1fr 1fr; } }
+  .h3 { font-size: 1.2rem; margin: 0 0 12px; }
+  .checks { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+  .checks li { padding-left: 28px; position: relative; }
+  .checks li::before { content: '✓'; position: absolute; left: 0; top: 0; width: 20px; height: 20px; border-radius: 50%; background: var(--yes-soft); color: var(--yes); font-weight: 800; font-size: 0.8rem; display: grid; place-items: center; }
+  .flow { margin: 0; padding-left: 1.2em; display: grid; gap: 10px; }
+  .faq { padding: 0; margin-bottom: 10px; }
+  .faq summary { cursor: pointer; padding: 16px 20px; font-weight: 650; list-style: none; position: relative; }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary::after { content: '+'; position: absolute; right: 20px; color: var(--brand); font-weight: 800; }
+  .faq[open] summary::after { content: '–'; }
+  .faq p { margin: 0; padding: 0 20px 18px; color: var(--ink-2); }
+  .form-box { padding: 28px; border-color: #b9dcd8; box-shadow: 0 18px 40px -24px rgba(15, 46, 53, 0.35); }
+  .form-box h2 { margin-top: 0; }
+  .signature { text-align: center; margin-top: 18px; }
+  .sticky-cta { position: fixed; left: 16px; right: 16px; bottom: 14px; z-index: 20; box-shadow: 0 10px 24px -8px rgba(15, 46, 53, 0.5); }
+  @media (min-width: 760px) { .sticky-cta { display: none; } }
+  @media (max-width: 759px) { :global(.site-footer) { padding-bottom: 90px; } }
+</style>

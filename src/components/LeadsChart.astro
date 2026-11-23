@@ -1,0 +1,72 @@
+---
+// Graf poptávek po dnech (skládané sloupce) a kumulativní součet. Data: Meta Ads, 3.–23. 11. 2026.
+interface Props { entry: number[]; hygiene: number[]; startDay: number; month: number }
+const { entry, hygiene, startDay, month } = Astro.props;
+const days = entry.map((e, i) => ({ day: startDay + i, entry: e, hygiene: hygiene[i] ?? 0 }));
+const W = 720, H = 280, padL = 34, padR = 14, padT = 16, padB = 34;
+const innerW = W - padL - padR, innerH = H - padT - padB;
+const maxDay = Math.max(...days.map((d) => d.entry + d.hygiene));
+const yMax = Math.ceil(maxDay / 2) * 2 + 1;
+const step = innerW / days.length, barW = step * 0.62;
+const y = (v: number) => padT + innerH - (v / yMax) * innerH;
+const ticks = Array.from({ length: Math.floor(yMax / 2) + 1 }, (_, i) => i * 2).filter((t) => t <= yMax);
+
+// Kumulativní křivka
+let acc = 0;
+const cum = days.map((d) => (acc += d.entry + d.hygiene));
+const total = acc;
+const CH = 130, cPadT = 30, cPadB = 22;
+const cy = (v: number) => cPadT + (CH - cPadT - cPadB) * (1 - v / total);
+const cx = (i: number) => padL + step * i + step / 2;
+const line = cum.map((v, i) => `${i ? 'L' : 'M'}${cx(i).toFixed(1)} ${cy(v).toFixed(1)}`).join(' ');
+const area = `${line} L${cx(cum.length - 1).toFixed(1)} ${CH - cPadB} L${cx(0).toFixed(1)} ${CH - cPadB} Z`;
+---
+<figure class="chart panel">
+  <figcaption>
+    <strong>Poptávky přibývaly každý den</strong>
+    <span class="legend">
+      <span><i style="background:#0b6f70"></i>Vstupní prohlídka</span>
+      <span><i style="background:#7cc4b5"></i>Dentální hygiena</span>
+    </span>
+  </figcaption>
+
+  <svg viewBox={`0 0 ${W} ${CH}`} class="cum" role="img" aria-label={`Kumulativní počet poptávek, celkem ${total} za ${days.length} dní`}>
+    <path d={area} fill="#e3f1f0" />
+    <path d={line} fill="none" stroke="#0b6f70" stroke-width="2.5" stroke-linejoin="round" />
+    <circle cx={cx(cum.length - 1)} cy={cy(total)} r="5" fill="#0b6f70" />
+    <text x={cx(cum.length - 1) - 4} y={cy(total) - 10} text-anchor="end" font-size="13" font-weight="700" fill="#0f2e35">{total} poptávek celkem</text>
+    <text x={padL} y="12" font-size="11" fill="#7b8f94">Součet od spuštění</text>
+  </svg>
+
+  <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Počet poptávek po dnech">
+    {ticks.map((t) => (
+      <g>
+        <line x1={padL} x2={W - padR} y1={y(t)} y2={y(t)} stroke="#eaf0ef" />
+        <text x={padL - 8} y={y(t) + 4} text-anchor="end" font-size="11" fill="#7b8f94">{t}</text>
+      </g>
+    ))}
+    {days.map((d, i) => {
+      const x = padL + step * i + (step - barW) / 2;
+      const hE = (d.entry / yMax) * innerH, hH = (d.hygiene / yMax) * innerH;
+      const base = padT + innerH;
+      return (
+        <g>
+          <title>{`${d.day}. ${month}.: ${d.entry} vstupní prohlídka, ${d.hygiene} hygiena`}</title>
+          {d.entry > 0 && <rect x={x} y={base - hE} width={barW} height={hE} rx="3" fill="#0b6f70" />}
+          {d.hygiene > 0 && <rect x={x} y={base - hE - hH - 2} width={barW} height={hH} rx="3" fill="#7cc4b5" />}
+          {(i % 3 === 0 || i === days.length - 1) && <text x={x + barW / 2} y={H - 12} text-anchor="middle" font-size="11" fill="#7b8f94">{`${d.day}. ${month}.`}</text>}
+        </g>
+      );
+    })}
+  </svg>
+  <p class="small muted src">Zdroj: Meta Ads Manager, kampaně s formulářem, 3.–23. 11. 2026.</p>
+</figure>
+<style>
+  .chart { padding: 20px 20px 12px; margin: 0; }
+  .chart svg { width: 100%; height: auto; display: block; font-family: var(--font); }
+  .chart .cum { margin: 10px 0 4px; }
+  figcaption { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; align-items: center; font-size: 1.05rem; }
+  .legend { display: flex; gap: 16px; font-size: 0.88rem; color: var(--ink-2); }
+  .legend i { display: inline-block; width: 11px; height: 11px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+  .src { margin: 8px 0 0; }
+</style>
