@@ -1,7 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import StatusPill from '../components/StatusPill.astro';
-import { getClinics, getCities, getCategoryCounts, getLatestReviews } from '../lib/data';
+import { getClinics, getCities, getCategoryCounts, getLatestReviews, getKraje } from '../lib/data';
 import { INSURERS, plural } from '../lib/taxonomy.mjs';
 import { SITE } from '../lib/site';
 
@@ -15,6 +15,7 @@ for (const c of clinics) tally[(c.accepts_new ?? 'nic') as keyof typeof tally]++
 const accepting = clinics.filter((c) => c.accepts_new === 'ano').slice(0, 5);
 const verified = tally.ano + tally.omezene + tally.ne;
 const topCities = cities.slice(0, 16);
+const kraje = await getKraje();
 
 const ld = [{
   '@context': 'https://schema.org', '@type': 'WebSite', name: SITE.name, url: SITE.url, inLanguage: 'cs',
@@ -22,21 +23,21 @@ const ld = [{
 }];
 ---
 <Layout
-  title="Zubaři, zubní kliniky a dentální hygiena v Moravskoslezském kraji"
-  description={`Přehled ${total} zubních ordinací, klinik a dentálních hygien v Moravskoslezském kraji. Zjistěte, kdo bere nové pacienty a na jaké pojišťovny, a přečtěte si recenze.`}
+  title="Zubaři, zubní kliniky a dentální hygiena v celé ČR – kdo bere nové pacienty"
+  description={`Přehled ${total} zubních ordinací, klinik a dentálních hygien v České republice. Zjistěte, kdo bere nové pacienty a na jaké pojišťovny, a přečtěte si recenze.`}
   jsonLd={ld}>
   <section class="hero">
     <div class="wrap hero-grid">
       <div>
         <h1>Najděte zubaře, který vás opravdu vezme.</h1>
-        <p class="lead">{total} zubních ordinací, klinik a dentálních hygien v Moravskoslezském kraji. Ke každé doplňujeme, jestli bere nové pacienty a se kterými pojišťovnami má smlouvu.</p>
+        <p class="lead">{total.toLocaleString('cs-CZ')} zubních ordinací, klinik a dentálních hygien v celé České republice. Ke každé doplňujeme, jestli bere nové pacienty a se kterými pojišťovnami má smlouvu.</p>
         <form class="search panel" action="/hledat" method="get" id="hero-search">
           <div class="search-grid">
             <div>
-              <label for="s-mesto">Město</label>
-              <select id="s-mesto" name="mesto">
-                <option value="">Celý kraj</option>
-                {cities.map((c) => <option value={c.slug}>{c.name}</option>)}
+              <label for="s-kraj">Kraj</label>
+              <select id="s-kraj" name="kraj">
+                <option value="">Celá ČR</option>
+                {kraje.map((k) => <option value={k.slug}>{k.name}</option>)}
               </select>
             </div>
             <div>
@@ -95,7 +96,11 @@ const ld = [{
 
   <section class="section">
     <div class="wrap">
-      <h2>Zubaři podle měst</h2>
+      <h2>Zubaři podle krajů</h2>
+      <ul class="places" style="margin-bottom:28px">
+        {kraje.map((k) => <li><a href={`/kraj/${k.slug}`}>{k.name}<span class="n">{k.count}</span></a></li>)}
+      </ul>
+      <h2>Největší města</h2>
       <ul class="places">
         {topCities.map((c) => <li><a href={`/mesto/${c.slug}`}>{c.name}<span class="n">{c.count}</span></a></li>)}
       </ul>

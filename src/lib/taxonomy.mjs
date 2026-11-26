@@ -112,6 +112,54 @@ const LOCATIVE = {
   'Třebovice': 'v Třebovicích', 'Martinov': 'v Martinově', 'Nová Bělá a Stará Bělá': 'v Nové Bělé a Staré Bělé',
   'Polanka nad Odrou': 'v Polance nad Odrou', 'Krásné Pole': 'v Krásném Poli', 'Plesná': 'v Plesné', 'Lhotka': 'v Lhotce', 'Petřkovice': 'v Petřkovicích',
 };
+
+// Města mimo MSK (celá ČR) – lokál pro nadpisy.
+const LOCATIVE_CZ = {
+  'Praha': 'v Praze', 'Brno': 'v Brně', 'Plzeň': 'v Plzni', 'Olomouc': 'v Olomouci', 'České Budějovice': 'v Českých Budějovicích',
+  'Hradec Králové': 'v Hradci Králové', 'Zlín': 've Zlíně', 'Liberec': 'v Liberci', 'Pardubice': 'v Pardubicích', 'Karlovy Vary': 'v Karlových Varech',
+  'Mladá Boleslav': 'v Mladé Boleslavi', 'Ústí nad Labem': 'v Ústí nad Labem', 'Prostějov': 'v Prostějově', 'Uherské Hradiště': 'v Uherském Hradišti',
+  'Kladno': 'v Kladně', 'Jihlava': 'v Jihlavě', 'Teplice': 'v Teplicích', 'Příbram': 'v Příbrami', 'Znojmo': 've Znojmě', 'Hodonín': 'v Hodoníně',
+  'Vyškov': 've Vyškově', 'Přerov': 'v Přerově', 'Šumperk': 'v Šumperku', 'Tábor': 'v Táboře', 'Děčín': 'v Děčíně', 'Jablonec nad Nisou': 'v Jablonci nad Nisou',
+  'Most': 'v Mostě', 'Kroměříž': 'v Kroměříži', 'Klatovy': 'v Klatovech', 'Chomutov': 'v Chomutově', 'Třebíč': 'v Třebíči', 'Břeclav': 'v Břeclavi',
+  'Česká Lípa': 'v České Lípě', 'Beroun': 'v Berouně', 'Kolín': 'v Kolíně', 'Havlíčkův Brod': 'v Havlíčkově Brodě', 'Chrudim': 'v Chrudimi',
+  'Litoměřice': 'v Litoměřicích', 'Žďár nad Sázavou': 've Žďáru nad Sázavou', 'Uherský Brod': 'v Uherském Brodě', 'Trutnov': 'v Trutnově', 'Slaný': 've Slaném',
+  'Valašské Meziříčí': 've Valašském Meziříčí', 'Benešov': 'v Benešově', 'Vsetín': 've Vsetíně', 'Jindřichův Hradec': 'v Jindřichově Hradci',
+  'Strakonice': 've Strakonicích', 'Kyjov': 'v Kyjově', 'Písek': 'v Písku', 'Cheb': 'v Chebu', 'Poděbrady': 'v Poděbradech', 'Rakovník': 'v Rakovníku',
+  'Náchod': 'v Náchodě', 'Blansko': 'v Blansku', 'Kutná Hora': 'v Kutné Hoře', 'Jičín': 'v Jičíně', 'Říčany': 'v Říčanech', 'Louny': 'v Lounech',
+  'Nymburk': 'v Nymburce', 'Mělník': 'v Mělníku', 'Český Krumlov': 'v Českém Krumlově', 'Pelhřimov': 'v Pelhřimově', 'Otrokovice': 'v Otrokovicích',
+  'Jeseník': 'v Jeseníku', 'Žatec': 'v Žatci', 'Hranice': 'v Hranicích', 'Rožnov pod Radhoštěm': 'v Rožnově pod Radhoštěm', 'Turnov': 'v Turnově',
+  'Brandýs nad Labem-Stará Boleslav': 'v Brandýse nad Labem-Staré Boleslavi', 'Litvínov': 'v Litvínově', 'Šternberk': 've Šternberku', 'Vlašim': 've Vlašimi',
+  'Mariánské Lázně': 'v Mariánských Lázních', 'Rokycany': 'v Rokycanech', 'Lanškroun': 'v Lanškrouně', 'Jesenice': 'v Jesenici', 'Domažlice': 'v Domažlicích',
+  'Kralupy nad Vltavou': 'v Kralupech nad Vltavou', 'Humpolec': 'v Humpolci', 'Veselí nad Moravou': 've Veselí nad Moravou', 'Ostrov': 'v Ostrově',
+  'Lovosice': 'v Lovosicích', 'Rychnov nad Kněžnou': 'v Rychnově nad Kněžnou', 'Boskovice': 'v Boskovicích', 'Čáslav': 'v Čáslavi', 'Dobříš': 'v Dobříši',
+  'Sokolov': 'v Sokolově', 'Neratovice': 'v Neratovicích', 'Hořice': 'v Hořicích', 'Zábřeh': 'v Zábřehu', 'Nové Město na Moravě': 'v Novém Městě na Moravě',
+  'Holešov': 'v Holešově', 'Dvůr Králové nad Labem': 've Dvoře Králové nad Labem', 'Ústí nad Orlicí': 'v Ústí nad Orlicí', 'Vrchlabí': 've Vrchlabí',
+  'Tachov': 'v Tachově', 'Chotěboř': 'v Chotěboři', 'Kadaň': 'v Kadani', 'Staré Město': 've Starém Městě', 'Roudné': 'v Roudném', 'Jaroměř': 'v Jaroměři',
+  'Židlochovice': 'v Židlochovicích', 'Sušice': 'v Sušici', 'Svitavy': 've Svitavách', 'Dačice': 'v Dačicích', 'Tišnov': 'v Tišnově', 'Litomyšl': 'v Litomyšli',
+  'Velké Meziříčí': 've Velkém Meziříčí', 'Nový Bydžov': 'v Novém Bydžově', 'Ledeč nad Sázavou': 'v Ledči nad Sázavou', 'Český Brod': 'v Českém Brodě',
+  'Vysoké Mýto': 've Vysokém Mýtě', 'Lipník nad Bečvou': 'v Lipníku nad Bečvou', 'Varnsdorf': 've Varnsdorfu', 'Hlinsko': 'v Hlinsku',
+  'Valašské Klobouky': 've Valašských Kloboukách', 'Bystřice nad Pernštejnem': 'v Bystřici nad Pernštejnem', 'Nový Bor': 'v Novém Boru',
+  'Česká Třebová': 'v České Třebové', 'Mnichovo Hradiště': 'v Mnichově Hradišti', 'Prachatice': 'v Prachaticích', 'Třeboň': 'v Třeboni',
+  'Hořovice': 'v Hořovicích', 'Mohelnice': 'v Mohelnici', 'Přeštice': 'v Přešticích', 'Blatná': 'v Blatné', 'Letovice': 'v Letovicích', 'Hustopeče': 'v Hustopečích',
+  'Klášterec nad Ohří': 'v Klášterci nad Ohří', 'Napajedla': 'v Napajedlech', 'Litovel': 'v Litovli', 'Uničov': 'v Uničově', 'Holice': 'v Holicích',
+  'Polička': 'v Poličce', 'Stříbro': 've Stříbře', 'Čelákovice': 'v Čelákovicích', 'Choceň': 'v Chocni', 'Kaplice': 'v Kaplici', 'Sezimovo Ústí': 'v Sezimově Ústí',
+  'Žamberk': 'v Žamberku', 'Bystřice pod Hostýnem': 'v Bystřici pod Hostýnem', 'Ostrožská Nová Ves': 'v Ostrožské Nové Vsi', 'Přelouč': 'v Přelouči',
+  'Aš': 'v Aši', 'Mníšek pod Brdy': 'v Mníšku pod Brdy', 'Velká Bíteš': 've Velké Bíteši', 'Kuřim': 'v Kuřimi',
+};
 export function locative(name) {
-  return LOCATIVE[name] ?? `v obci ${name}`;
+  if (LOCATIVE[name]) return LOCATIVE[name];
+  if (LOCATIVE_CZ[name]) return LOCATIVE_CZ[name];
+  const p = String(name).match(/^Praha (\d+)$/);
+  if (p) return `v Praze ${p[1]}`;
+  return `v obci ${name}`;
 }
+
+// Kraje – 2. a 6. pád pro nadpisy.
+export const KRAJE = [
+  ['Hlavní město Praha', 'v Praze'], ['Středočeský kraj', 've Středočeském kraji'], ['Jihočeský kraj', 'v Jihočeském kraji'],
+  ['Plzeňský kraj', 'v Plzeňském kraji'], ['Karlovarský kraj', 'v Karlovarském kraji'], ['Ústecký kraj', 'v Ústeckém kraji'],
+  ['Liberecký kraj', 'v Libereckém kraji'], ['Královéhradecký kraj', 'v Královéhradeckém kraji'], ['Pardubický kraj', 'v Pardubickém kraji'],
+  ['Kraj Vysočina', 'v Kraji Vysočina'], ['Jihomoravský kraj', 'v Jihomoravském kraji'], ['Olomoucký kraj', 'v Olomouckém kraji'],
+  ['Zlínský kraj', 've Zlínském kraji'], ['Moravskoslezský kraj', 'v Moravskoslezském kraji'],
+].map(([name, loc]) => ({ name, loc, slug: slugify(name.replace(/^Hlavní město /, '')) }));
+export const KRAJ_BY_NAME = Object.fromEntries(KRAJE.map((k) => [k.name, k]));

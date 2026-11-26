@@ -2,7 +2,7 @@
 import Layout from '../../../layouts/Layout.astro';
 import Breadcrumbs from '../../../components/Breadcrumbs.astro';
 import ClinicList from '../../../components/ClinicList.astro';
-import { getClinics, getCategoryCounts } from '../../../lib/data';
+import { getClinics, getCategoryCounts, getKraje } from '../../../lib/data';
 import { CATEGORIES, slugify, locative } from '../../../lib/taxonomy.mjs';
 import { summary } from '../../../lib/text';
 
@@ -16,23 +16,32 @@ const cats = await getCategoryCounts();
 const cityCounts = new Map<string, { name: string; n: number }>();
 for (const c of list) cityCounts.set(c.city_slug, { name: c.city, n: (cityCounts.get(c.city_slug)?.n ?? 0) + 1 });
 const cities = [...cityCounts].sort((a, b) => b[1].n - a[1].n);
+const kraje = (await getKraje()).map((k) => ({ ...k, n: list.filter((c) => c.kraj_slug === k.slug).length })).filter((k) => k.n > 0);
+// Celou ČR nevypisujeme – u velkých oborů ukážeme jen ověřené a prémiové, zbytek přes kraje a města.
+const big = list.length > 300;
+const shown = big ? list.filter((c) => c.accepts_new || c.premium).slice(0, 100) : list;
 ---
-<Layout title={`${cat.name} – Moravskoslezský kraj`} description={`${cat.name}: ${list.length} ordinací v Moravskoslezském kraji. ${cat.desc} Kdo bere nové pacienty, pojišťovny a recenze.`}>
+<Layout title={`${cat.name} – celá ČR`} description={`${cat.name}: ${list.length} ordinací v České republice. ${cat.desc} Kdo bere nové pacienty, pojišťovny a recenze.`}>
   <Breadcrumbs items={[{ name: 'Obory', href: '/obor/zubar' }, { name: cat.name }]} />
   <section class="section" style="padding-top:20px">
     <div class="wrap">
       <nav class="tabs" aria-label="Obory">
         {cats.map((c) => <a href={`/obor/${c.slug}`} aria-current={c.slug === cat.slug ? 'page' : undefined}>{c.name}</a>)}
       </nav>
-      <h1>{cat.name} v Moravskoslezském kraji</h1>
-      <p class="lead">{cat.desc} {summary(list, 'v kraji')}</p>
+      <h1>{cat.name} v České republice</h1>
+      <p class="lead">{cat.desc} {summary(list, 'v ČR')}</p>
       {cities.length > 1 && (
         <nav class="subnav" aria-label="Města">
           <span class="muted small">Podle měst:</span>
-          {cities.slice(0, 14).map(([slug, v]) => (v.n >= 2 ? <a href={`/obor/${cat.slug}/${slug}`}>{v.name} <span class="muted">({v.n})</span></a> : <a href={`/mesto/${slug}?obor=${cat.slug}`}>{v.name} <span class="muted">({v.n})</span></a>))}
+          {cities.slice(0, 24).map(([slug, v]) => (v.n >= 2 ? <a href={`/obor/${cat.slug}/${slug}`}>{v.name} <span class="muted">({v.n})</span></a> : <a href={`/mesto/${slug}?obor=${cat.slug}`}>{v.name} <span class="muted">({v.n})</span></a>))}
         </nav>
       )}
-      <ClinicList clinics={list} catFilter={false} />
+      <nav class="subnav" aria-label="Kraje">
+        <span class="muted small">Podle krajů:</span>
+        {kraje.map((k) => <a href={`/hledat?kraj=${k.slug}&obor=${cat.slug}`}>{k.name} <span class="muted">({k.n})</span></a>)}
+      </nav>
+      {big && <h2 style="margin-top:28px">{shown.length ? 'Ověřené a prémiové ordinace' : 'Vyberte kraj nebo město'}</h2>}
+      {shown.length > 0 && <ClinicList clinics={shown} catFilter={false} />}
     </div>
   </section>
 </Layout>

@@ -1,17 +1,18 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { getCities, getCategoryCounts } from '../lib/data';
+import { getCategoryCounts, getKraje } from '../lib/data';
 import { INSURERS } from '../lib/taxonomy.mjs';
-const cities = await getCities();
+const kraje = await getKraje();
 const cats = await getCategoryCounts();
 ---
-<Layout title="Hledat zubaře" description="Vyhledávání zubních ordinací v Moravskoslezském kraji." noindex>
+<Layout title="Hledat zubaře" description="Vyhledávání zubních ordinací v celé České republice." noindex>
   <section class="section">
     <div class="wrap">
       <h1>Hledat zubaře</h1>
       <form id="sf" class="filters" role="search" onsubmit="return false" style="position:static">
         <input name="q" type="search" placeholder="Jméno lékaře, ordinace nebo ulice" aria-label="Hledaný text" style="flex:1 1 260px;border-radius:999px;padding:8px 14px" />
-        <select name="mesto" aria-label="Město"><option value="">Celý kraj</option>{cities.map((c) => <option value={c.slug}>{c.name}</option>)}</select>
+        <select name="kraj" aria-label="Kraj"><option value="">Celá ČR</option>{kraje.map((k) => <option value={k.slug}>{k.name}</option>)}</select>
+        <input type="hidden" name="mesto" />
         <select name="obor" aria-label="Obor"><option value="">Všechny obory</option>{cats.map((c) => <option value={c.slug}>{c.name}</option>)}</select>
         <select name="pojistovna" aria-label="Pojišťovna"><option value="">Jakákoli pojišťovna</option>{INSURERS.map((i) => <option value={i.code}>{i.short} ({i.code})</option>)}</select>
         <label class="toggle"><input type="checkbox" name="nove" value="1" /> Jen ty, co berou nové pacienty</label>
@@ -40,9 +41,9 @@ const cats = await getCategoryCounts();
   const render = () => {
     const f = new FormData(form);
     const q = fold(String(f.get('q') || '')).split(/\s+/).filter(Boolean);
-    const mesto = f.get('mesto'), obor = String(f.get('obor') || ''), poj = String(f.get('pojistovna') || ''), nove = f.get('nove');
+    const mesto = f.get('mesto'), kraj = f.get('kraj'), obor = String(f.get('obor') || ''), poj = String(f.get('pojistovna') || ''), nove = f.get('nove');
     const hits = rows.filter((r, i) =>
-      q.every((w) => hay[i].includes(w)) && (!mesto || r[4] === mesto) && (!obor || r[6].split(' ').includes(obor)) &&
+      q.every((w) => hay[i].includes(w)) && (!mesto || r[4] === mesto) && (!kraj || r[14] === kraj) && (!obor || r[6].split(' ').includes(obor)) &&
       (!poj || r[7].split(' ').includes(poj)) && (!nove || r[8] === 'ano' || r[8] === 'omezene'));
     count.textContent = hits.length ? `Nalezeno: ${hits.length}` : 'Nic jsme nenašli. Zkuste uvolnit filtry nebo hledat jen část jména.';
     out.innerHTML = hits.slice(0, 200).map((r) => `

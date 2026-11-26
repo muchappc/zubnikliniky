@@ -1,0 +1,62 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import ClinicRow from '../../components/ClinicRow.astro';
+import { getKraje, type Kraj } from '../../lib/data';
+import { CATEGORIES, plural } from '../../lib/taxonomy.mjs';
+
+export async function getStaticPaths() {
+  const kraje = await getKraje();
+  return kraje.map((k) => ({ params: { kraj: k.slug }, props: { k, others: kraje.filter((x) => x.slug !== k.slug) } }));
+}
+const { k, others } = Astro.props as { k: Kraj; others: Kraj[] };
+const clinics = k.cities.flatMap((c) => c.clinics);
+const accepting = clinics.filter((c) => c.accepts_new === 'ano' || c.accepts_new === 'omezene').slice(0, 12);
+const premium = clinics.filter((c) => c.premium && !accepting.includes(c)).slice(0, 6);
+const top = k.cities.slice(0, 24);
+const alpha = [...k.cities].sort((a, b) => a.name.localeCompare(b.name, 'cs'));
+const cats = CATEGORIES.map((c) => ({ ...c, n: clinics.filter((x) => x.categories.includes(c.slug)).length })).filter((c) => c.n > 0);
+---
+<Layout
+  title={`Zubaři ${k.loc} – kdo bere nové pacienty`}
+  description={`${k.count} ${plural(k.count, 'zubní ordinace', 'zubní ordinace', 'zubních ordinací')}, klinik a dentálních hygien ${k.loc} v ${k.cities.length} městech a obcích. Kdo bere nové pacienty, pojišťovny a recenze.`}>
+  <Breadcrumbs items={[{ name: 'Kraje', href: '/mesta' }, { name: k.name }]} />
+  <section class="section" style="padding-top:20px">
+    <div class="wrap">
+      <h1>Zubaři {k.loc}</h1>
+      <p class="lead">{k.count} {plural(k.count, 'zubní ordinace', 'zubní ordinace', 'zubních ordinací')}, klinik a dentálních hygien v {k.cities.length} {plural(k.cities.length, 'městě nebo obci', 'městech a obcích', 'městech a obcích')}. Vyberte město, nebo <a href={`/hledat?kraj=${k.slug}`}>hledejte podle jména, oboru a pojišťovny</a>.</p>
+      <h2>Největší města</h2>
+      <ul class="places">{top.map((c) => <li><a href={`/mesto/${c.slug}`}>{c.name}<span class="n">{c.count}</span></a></li>)}</ul>
+      <nav class="subnav" aria-label="Obory" style="margin-top:20px">
+        <span class="muted small">Obory:</span>
+        {cats.map((c) => <a href={`/hledat?kraj=${k.slug}&obor=${c.slug}`}>{c.name} <span class="muted">({c.n})</span></a>)}
+      </nav>
+    </div>
+  </section>
+  {(accepting.length > 0 || premium.length > 0) && (
+    <section class="section">
+      <div class="wrap">
+        <h2>{accepting.length ? 'Berou nové pacienty' : 'Ordinace s rozšířeným profilem'}</h2>
+        <ul class="list">{[...accepting, ...premium].map((c) => <ClinicRow c={c} />)}</ul>
+      </div>
+    </section>
+  )}
+  {alpha.length > top.length && (
+    <section class="section">
+      <div class="wrap">
+        <h2>Všechna města a obce</h2>
+        <ul class="places small-places">{alpha.map((c) => <li><a href={`/mesto/${c.slug}`}>{c.name}<span class="n">{c.count}</span></a></li>)}</ul>
+      </div>
+    </section>
+  )}
+  <section class="section">
+    <div class="wrap">
+      <h2>Další kraje</h2>
+      <ul class="places">{others.map((o) => <li><a href={`/kraj/${o.slug}`}>{o.name}<span class="n">{o.count}</span></a></li>)}</ul>
+    </div>
+  </section>
+</Layout>
+<style>
+  .subnav { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: baseline; font-size: 0.95rem; }
+  .subnav a { text-decoration: none; font-weight: 550; }
+</style>

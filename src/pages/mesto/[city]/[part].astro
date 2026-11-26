@@ -21,7 +21,7 @@ const loc = locative(part.name);
 <Layout
   title={`Zubaři ${part.name} (${city.name}) – kdo bere nové pacienty`}
   description={`${part.count} ${plural(part.count, 'zubní ordinace', 'zubní ordinace', 'zubních ordinací')} a dentálních hygien ${loc}. Kdo bere nové pacienty, pojišťovny, kontakty a recenze.`}>
-  <Breadcrumbs items={[{ name: 'Města', href: '/mesta' }, { name: city.name, href: `/mesto/${city.slug}` }, { name: part.name }]} />
+  <Breadcrumbs items={[{ name: city.kraj ?? 'Kraj', href: `/kraj/${city.kraj_slug}` }, { name: city.name, href: `/mesto/${city.slug}` }, { name: part.name }]} />
   <section class="section" style="padding-top:20px">
     <div class="wrap">
       <h1>Zubaři {loc}</h1>

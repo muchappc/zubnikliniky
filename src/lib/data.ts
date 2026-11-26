@@ -3,7 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { createClient } from '@supabase/supabase-js';
-import { slugify, CATEGORIES, OSTRAVA_PARTS_BY_ZIP } from './taxonomy.mjs';
+import { slugify, CATEGORIES, OSTRAVA_PARTS_BY_ZIP, KRAJE, KRAJ_BY_NAME } from './taxonomy.mjs';
 
 export interface Clinic {
   id: string;
@@ -38,6 +38,7 @@ export interface Clinic {
   rating_count: number;
   city_slug: string;
   part_slug: string;
+  kraj_slug: string;
 }
 
 export interface Review {
@@ -51,7 +52,7 @@ export interface Review {
   clinic_reply_at: string | null;
 }
 
-let cache: { clinics: Clinic[]; reviews: Review[] } | null = null;
+let cache: { clinics: Clinic[]; reviews: Review[]; merged: { slug: string; target: string }[] } | null = null;
 
 async function load() {
   if (cache) return cache;
@@ -61,6 +62,7 @@ async function load() {
   const key = service || (serverKey ? e('PUBLIC_SUPABASE_ANON_KEY') : '');
   let rawClinics: any[] = [];
   let reviews: Review[] = [];
+  let merged: { slug: string; target: string }[] = [];
   if (url && key) {
     const sb = createClient(url, key, { auth: { persistSession: false }, global: service ? {} : { headers: { 'x-server-key': serverKey } } });
     const all: any[] = [];
@@ -71,6 +73,9 @@ async function load() {
       if (data.length < 1000) break;
     }
     rawClinics = all;
+    const { data: mg } = await sb.from('clinics').select('slug, merged_into').eq('hidden', true).not('merged_into', 'is', null);
+    const slugById = new Map(all.map((c) => [c.id, c.slug]));
+    merged = (mg ?? []).map((m: any) => ({ slug: m.slug, target: slugById.get(m.merged_into) })).filter((m: any) => m.target);
     const { data: rv, error: re } = await sb
       .from('reviews')
       .select('id, clinic_id, author_name, rating, text, created_at, clinic_reply, clinic_reply_at')
@@ -91,6 +96,19 @@ async function load() {
     s.sum += r.rating; s.n += 1;
     stats.set(r.clinic_id, s);
   }
+  // Stejně pojmenované obce v různých okresech: větší si nechá čistý slug, ostatní dostanou okres.
+  const byName = new Map<string, Map<string, number>>();
+  for (const c of rawClinics) {
+    const m = byName.get(c.city) ?? new Map();
+    m.set(c.okres || '', (m.get(c.okres || '') ?? 0) + 1);
+    byName.set(c.city, m);
+  }
+  const citySlug = (city: string, okres: string) => {
+    const m = byName.get(city);
+    if (!m || m.size < 2) return slugify(city);
+    const main = [...m.entries()].sort((a, b) => b[1] - a[1])[0][0];
+    return (okres || '') === main ? slugify(city) : slugify(`${city} ${okres}`);
+  };
   const clinics: Clinic[] = rawClinics.map((c) => {
     const s = stats.get(c.id);
     const part = c.city_part || (/^ostrava$/i.test(c.city) ? OSTRAVA_PARTS_BY_ZIP[String(c.zip).replace(/\s/g, '')] ?? '' : '');
@@ -102,12 +120,13 @@ async function load() {
       city_part: part,
       rating_avg: s ? Math.round((s.sum / s.n) * 10) / 10 : null,
       rating_count: s?.n ?? 0,
-      city_slug: slugify(c.city),
+      city_slug: citySlug(c.city, c.okres),
       part_slug: slugify(part),
+      kraj_slug: KRAJ_BY_NAME[c.kraj]?.slug ?? slugify(c.kraj || ''),
     };
   });
   clinics.sort(defaultSort);
-  cache = { clinics, reviews };
+  cache = { clinics, reviews, merged };
   return cache;
 }
 
@@ -130,12 +149,23 @@ export async function getLatestReviews(n = 6) {
   return reviews.filter((r) => byId.has(r.clinic_id)).slice(0, n).map((r) => ({ ...r, clinic: byId.get(r.clinic_id)! }));
 }
 
-export interface Place { name: string; slug: string; count: number; clinics: Clinic[] }
+export interface Place { name: string; slug: string; count: number; clinics: Clinic[]; kraj?: string; kraj_slug?: string; okres?: string }
+
+export async function getMerged() { return (await load()).merged; }
+
+export interface Kraj { name: string; slug: string; loc: string; count: number; cities: Place[] }
+export async function getKraje(): Promise<Kraj[]> {
+  const cities = await getCities();
+  return KRAJE.map((k) => {
+    const cs = cities.filter((c) => c.kraj_slug === k.slug);
+    return { ...k, cities: cs, count: cs.reduce((n, c) => n + c.count, 0) };
+  }).filter((k) => k.count > 0);
+}
 
 export async function getCities(): Promise<Place[]> {
   const map = new Map<string, Place>();
   for (const c of await getClinics()) {
-    const p = map.get(c.city_slug) ?? { name: c.city, slug: c.city_slug, count: 0, clinics: [] };
+    const p = map.get(c.city_slug) ?? { name: c.city_slug === slugify(c.city) ? c.city : `${c.city} (${c.okres})`, slug: c.city_slug, count: 0, clinics: [], kraj: c.kraj, kraj_slug: c.kraj_slug, okres: c.okres };
     p.count++; p.clinics.push(c);
     map.set(c.city_slug, p);
   }
@@ -167,7 +197,12 @@ function distKm(a: Clinic, b: Clinic) {
 
 // Podobné ordinace: stejný hlavní obor, nejblíž podle GPS, jinak stejná část města / město.
 export async function getNearby(c: Clinic, n = 5) {
-  const all = (await getClinics()).filter((x) => x.id !== c.id && x.categories[0] === c.categories[0]);
+  let all = (await getClinics()).filter((x) => x.id !== c.id && x.categories[0] === c.categories[0]);
+  // jen okolí (zhruba ±25 km), aby build s celou ČR netrval věčnost
+  if (c.lat != null && c.lng != null) {
+    const near = all.filter((x) => x.lat != null && x.lng != null && Math.abs(x.lat - c.lat!) < 0.25 && Math.abs(x.lng! - c.lng!) < 0.4);
+    all = near.length >= n ? near : all.filter((x) => x.kraj_slug === c.kraj_slug);
+  } else all = all.filter((x) => x.city_slug === c.city_slug || x.kraj_slug === c.kraj_slug);
   return all
     .map((x) => ({ x, d: distKm(c, x), same: (x.part_slug && x.part_slug === c.part_slug ? 0 : 1) + (x.city_slug === c.city_slug ? 0 : 2) }))
     .sort((a, b) => (isFinite(a.d) && isFinite(b.d) ? a.d - b.d : a.same - b.same || defaultSort(a.x, b.x)))

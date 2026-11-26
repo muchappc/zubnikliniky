@@ -29,7 +29,7 @@ const usedParts = parts.filter((p: any) => list.some((c: any) => c.part_slug ===
       <h1>{cat.name} {loc}</h1>
       <p class="lead">{cat.desc} {summary(list, loc)}</p>
       <ClinicList clinics={list} parts={usedParts} catFilter={false} />
-      <p style="margin-top:24px"><a href={`/mesto/${city.slug}`}>Všechny zubní ordinace {loc}</a> · <a href={`/obor/${cat.slug}`}>{cat.name} v celém kraji</a></p>
+      <p style="margin-top:24px"><a href={`/mesto/${city.slug}`}>Všechny zubní ordinace {loc}</a> · <a href={`/obor/${cat.slug}`}>{cat.name} v celé ČR</a></p>
     </div>
   </section>
 </Layout>

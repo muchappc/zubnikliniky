@@ -3,16 +3,14 @@ import Layout from '../layouts/Layout.astro';
 import Breadcrumbs from '../components/Breadcrumbs.astro';
 import ApiForms from '../components/ApiForms.astro';
 import Honeypot from '../components/Honeypot.astro';
-import { getClinics } from '../lib/data';
 import { SITE } from '../lib/site';
-const clinics = [...(await getClinics())].sort((a, b) => a.display_name.localeCompare(b.display_name, 'cs'));
 ---
 <Layout title="Pro zubaře a dentální hygienistky" description="Upravte zdarma údaje své ordinace na zubnikliniky.cz – příjem nových pacientů, pojišťovny, ordinační hodiny. Prémiový profil s poptávkami pacientů přímo do e-mailu.">
   <Breadcrumbs items={[{ name: 'Pro zubaře' }]} />
   <section class="section" style="padding-top:20px">
     <div class="wrap">
       <h1>Pacienti vás hledají. Ať najdou správné údaje.</h1>
-      <p class="lead">Na zubnikliniky.cz je každá zubní ordinace a dentální hygiena z Moravskoslezského kraje, která je v Národním registru poskytovatelů. Nejčastější otázka pacientů je, jestli berete nové pacienty a na jakou pojišťovnu. Když to u vás bude aktuální, přijdou jen ti, které opravdu můžete vzít.</p>
+      <p class="lead">Na zubnikliniky.cz je každá zubní ordinace a dentální hygiena z celé České republiky, která je v Národním registru poskytovatelů. Nejčastější otázka pacientů je, jestli berete nové pacienty a na jakou pojišťovnu. Když to u vás bude aktuální, přijdou jen ti, které opravdu můžete vzít.</p>
 
       <div class="tiers">
         <div class="panel tier">
@@ -86,7 +84,7 @@ const clinics = [...(await getClinics())].sort((a, b) => a.display_name.localeCo
         <div class="field">
           <label for="cl-clinic">Ordinace</label>
           <input id="cl-clinic" name="clinic_name" list="clinic-options" required placeholder="Začněte psát název nebo jméno lékaře" data-slug-target="cl-slug" />
-          <datalist id="clinic-options">{clinics.map((c) => <option value={`${c.display_name} – ${c.street}, ${c.city}`} data-slug={c.slug} />)}</datalist>
+          <datalist id="clinic-options"></datalist>
           <input type="hidden" name="clinic_slug" id="cl-slug" />
         </div>
         <div class="field-row">
@@ -139,13 +137,22 @@ const clinics = [...(await getClinics())].sort((a, b) => a.display_name.localeCo
   .tier-premium { border-color: #cbbcef; box-shadow: inset 4px 0 0 var(--premium); }
 </style>
 <script>
-  const opts = [...document.querySelectorAll<HTMLOptionElement>('#clinic-options option')];
+  // Seznam ordinací (celá ČR) se načte až při psaní, ať stránka není zbytečně velká.
+  const list = document.getElementById('clinic-options') as HTMLDataListElement;
+  let rows: any[] | null = null;
+  const load = async () => {
+    if (rows) return rows;
+    rows = await fetch('/index.json').then((r) => r.json());
+    list.innerHTML = rows!.map((r) => `<option data-slug="${r[0]}" value="${String(`${r[1]} – ${r[2]}, ${r[3]}`).replace(/"/g, '&quot;')}"></option>`).join('');
+    return rows;
+  };
   const pre = new URLSearchParams(location.search).get('ordinace');
   document.querySelectorAll<HTMLInputElement>('input[data-slug-target]').forEach((input) => {
     const slug = document.getElementById(input.dataset.slugTarget!) as HTMLInputElement;
-    const sync = () => { slug.value = opts.find((o) => o.value === input.value)?.dataset.slug ?? ''; };
+    const sync = () => { slug.value = [...list.options].find((o) => o.value === input.value)?.dataset.slug ?? ''; };
+    input.addEventListener('focus', load, { once: true });
     input.addEventListener('change', sync);
     input.addEventListener('input', sync);
-    if (pre) { const o = opts.find((o) => o.dataset.slug === pre); if (o) { input.value = o.value; sync(); } }
+    if (pre) load().then(() => { const o = [...list.options].find((o) => o.dataset.slug === pre); if (o) { input.value = o.value; sync(); } });
   });
 </script>

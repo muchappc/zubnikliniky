@@ -1,27 +1,29 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Breadcrumbs from '../components/Breadcrumbs.astro';
-import { getCities } from '../lib/data';
+import { getKraje, getCities } from '../lib/data';
+const kraje = await getKraje();
 const cities = await getCities();
-const byLetter = new Map<string, typeof cities>();
-for (const c of [...cities].sort((a, b) => a.name.localeCompare(b.name, 'cs'))) {
-  const l = c.name[0].toUpperCase();
-  byLetter.set(l, [...(byLetter.get(l) ?? []), c]);
-}
+const total = kraje.reduce((n, k) => n + k.count, 0);
 ---
-<Layout title="Zubaři podle měst – Moravskoslezský kraj" description={`Zubní ordinace a dentální hygiena v ${cities.length} městech a obcích Moravskoslezského kraje.`}>
-  <Breadcrumbs items={[{ name: 'Města' }]} />
+<Layout title="Zubaři podle krajů a měst – celá ČR" description={`Zubní ordinace a dentální hygiena ve všech krajích České republiky – ${total} ordinací v ${cities.length} městech a obcích.`}>
+  <Breadcrumbs items={[{ name: 'Kraje a města' }]} />
   <section class="section" style="padding-top:20px">
     <div class="wrap">
-      <h1>Zubaři podle měst</h1>
-      <p class="lead">Moravskoslezský kraj – {cities.length} měst a obcí s alespoň jednou zubní ordinací.</p>
-      {[...byLetter].map(([l, list]) => (
-        <div class="letter">
-          <h2>{l}</h2>
-          <ul class="places">{list.map((c) => <li><a href={`/mesto/${c.slug}`}>{c.name}<span class="n">{c.count}</span></a></li>)}</ul>
+      <h1>Zubaři podle krajů a měst</h1>
+      <p class="lead">{total} zubních ordinací v {cities.length} městech a obcích České republiky.</p>
+      <h2>Kraje</h2>
+      <ul class="places">{kraje.map((k) => <li><a href={`/kraj/${k.slug}`}>{k.name}<span class="n">{k.count}</span></a></li>)}</ul>
+      <h2 style="margin-top:32px">Největší města</h2>
+      <ul class="places">{cities.slice(0, 40).map((c) => <li><a href={`/mesto/${c.slug}`}>{c.name}<span class="n">{c.count}</span></a></li>)}</ul>
+      {kraje.map((k) => (
+        <div class="kraj">
+          <h2><a href={`/kraj/${k.slug}`}>{k.name}</a></h2>
+          <ul class="places">{k.cities.filter((c) => c.count >= 3).sort((a, b) => a.name.localeCompare(b.name, 'cs')).map((c) => <li><a href={`/mesto/${c.slug}`}>{c.name}<span class="n">{c.count}</span></a></li>)}</ul>
+          <p class="small" style="margin-top:8px"><a href={`/kraj/${k.slug}`}>Všechna města a obce v kraji ({k.cities.length})</a></p>
         </div>
       ))}
     </div>
   </section>
 </Layout>
-<style>.letter { margin-top: 28px; } .letter h2 { font-size: 1.2rem; color: var(--brand); margin-bottom: 4px; }</style>
+<style>.kraj { margin-top: 36px; } .kraj h2 { font-size: 1.25rem; margin-bottom: 8px; } .kraj h2 a { color: var(--brand); text-decoration: none; }</style>

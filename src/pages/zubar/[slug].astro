@@ -5,13 +5,17 @@ import StatusPill from '../../components/StatusPill.astro';
 import ClinicRow from '../../components/ClinicRow.astro';
 import ApiForms from '../../components/ApiForms.astro';
 import Honeypot from '../../components/Honeypot.astro';
-import { getClinics, getReviews, getNearby, type Clinic } from '../../lib/data';
+import { getClinics, getReviews, getNearby, getMerged, type Clinic } from '../../lib/data';
 import { CATEGORY_BY_SLUG, INSURERS, INSURER_BY_CODE, locative, plural } from '../../lib/taxonomy.mjs';
 import { SITE } from '../../lib/site';
 
 export async function getStaticPaths() {
-  return (await getClinics()).map((c) => ({ params: { slug: c.slug }, props: { c } }));
+  const live = (await getClinics()).map((c) => ({ params: { slug: c.slug }, props: { c } as any }));
+  // Sloučené duplicity přesměrujeme na hlavní profil.
+  const merged = (await getMerged()).map((m) => ({ params: { slug: m.slug }, props: { redirectTo: m.target } as any }));
+  return [...live, ...merged];
 }
+if ((Astro.props as any).redirectTo) return Astro.redirect(`/zubar/${(Astro.props as any).redirectTo}`, 301);
 const { c } = Astro.props as { c: Clinic };
 const reviews = await getReviews(c.id);
 const nearby = await getNearby(c, 5);
@@ -25,7 +29,7 @@ const allInsurers = c.insurers.length === INSURERS.length;
 // Telefon, e-mail a web zobrazujeme jen u prémiových profilů. Ostatním pacientům zprostředkujeme poptávku.
 const showContact = c.premium;
 
-const crumbs = [{ name: c.city, href: `/mesto/${c.city_slug}` }];
+const crumbs = [{ name: c.kraj, href: `/kraj/${c.kraj_slug}` }, { name: c.city, href: `/mesto/${c.city_slug}` }];
 if (c.city_part && c.part_slug) crumbs.push({ name: c.city_part, href: `/mesto/${c.city_slug}/${c.part_slug}` });
 crumbs.push({ name: c.display_name } as any);
 

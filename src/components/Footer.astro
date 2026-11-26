@@ -1,7 +1,8 @@
 ---
-import { getCities, getCategoryCounts } from '../lib/data';
+import { getCities, getCategoryCounts, getKraje } from '../lib/data';
+const kraje = await getKraje();
 import { SITE } from '../lib/site';
-const cities = (await getCities()).slice(0, 8);
+const cities = (await getCities()).slice(0, 10);
 const cats = await getCategoryCounts();
 const year = new Date().getFullYear();
 ---
@@ -10,11 +11,15 @@ const year = new Date().getFullYear();
     <div class="footer-grid">
       <div>
         <h3>zubnikliniky.cz</h3>
-        <p class="small" style="color:#9fb7b8">Přehled zubních ordinací, klinik a dentálních hygien v Moravskoslezském kraji. U každé ordinace se snažíme mít aktuální informaci, jestli bere nové pacienty.</p>
+        <p class="small" style="color:#9fb7b8">Přehled zubních ordinací, klinik a dentálních hygien v celé České republice. U každé ordinace se snažíme mít aktuální informaci, jestli bere nové pacienty.</p>
       </div>
       <div>
         <h3>Města</h3>
         <ul>{cities.map((c) => <li><a href={`/mesto/${c.slug}`}>Zubaři {c.name}</a></li>)}</ul>
+      </div>
+      <div>
+        <h3>Kraje</h3>
+        <ul>{kraje.map((k) => <li><a href={`/kraj/${k.slug}`}>{k.name}</a></li>)}</ul>
       </div>
       <div>
         <h3>Obory</h3>
