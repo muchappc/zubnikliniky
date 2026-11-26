@@ -1,0 +1,20 @@
+---
+import Page from '../../components/Page.astro';
+import { SITE } from '../../lib/site';
+---
+<Page title="Děkuji za objednávku prémiového profilu" description="Prémiový profil je zaplacený." crumb="Objednávka dokončena" noindex>
+  <h1>Děkuji, prémiový profil je zaplacený</h1>
+  <p class="lead">Platba proběhla. Prémium se zapíná automaticky a telefon, e-mail a odkaz na váš web se v profilu objeví během několika minut.</p>
+  <h2>Co dál</h2>
+  <ol>
+    <li>Do e-mailu vám přijde potvrzení a faktura od platební brány Stripe.</li>
+    <li>Pošlete mi na <a href={`mailto:${SITE.contactEmail}`}>{SITE.contactEmail}</a> krátký popis ordinace (3–5 vět) a až 5 fotografií. Doplním je do profilu.</li>
+    <li>Poptávky pacientů vám teď budou chodit rovnou do e-mailu ordinace.</li>
+  </ol>
+  <p>Kartu změníte nebo předplatné zrušíte na stránce <a href="/pro-zubare/predplatne">Správa předplatného</a>.</p>
+  <p id="profil"></p>
+  <script>
+    const s = new URLSearchParams(location.search).get('ordinace');
+    if (s && /^[a-z0-9-]+$/.test(s)) document.getElementById('profil')!.innerHTML = `<a class="btn" href="/zubar/${s}">Zobrazit profil ordinace</a>`;
+  </script>
+</Page>

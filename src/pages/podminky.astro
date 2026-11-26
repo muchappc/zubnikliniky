@@ -20,6 +20,16 @@ import { SITE } from '../lib/site';
   <p>Poptávku předáváme vybrané ordinaci. Provozovatel nezprostředkovává zdravotní péči, nerozhoduje o přijetí pacienta a neodpovídá za to, zda a jak ordinace odpoví.</p>
   <h2>Placené služby pro ordinace</h2>
   <p>Ordinace si mohou objednat prémiový profil. Placené profily jsou na webu vždy označené a nemají vliv na pořadí ve výpisech ani na recenze.</p>
+  <h3 id="predplatne">Předplatné prémiového profilu</h3>
+  <ul>
+    <li>Prémiový profil si může objednat ordinace nebo osoba oprávněná za ni jednat. Služba je určena podnikatelům.</li>
+    <li>Cena je {SITE.premiumPrice}, nebo {SITE.premiumPriceYear}. Provozovatel není plátcem DPH, ceny jsou konečné.</li>
+    <li>Platí se kartou přes platební bránu Stripe. Předplatné se automaticky obnovuje a platba se strhává na začátku každého období (měsíc nebo rok), dokud ho objednatel nezruší. Fakturu dostane objednatel e-mailem.</li>
+    <li>Předplatné lze kdykoli zrušit přes odkaz na stránce <a href="/pro-zubare/predplatne">Správa předplatného</a> nebo e-mailem na {SITE.contactEmail}. Zrušení platí ke konci zaplaceného období. Do té doby prémiový profil běží a za započaté období se platba nevrací.</li>
+    <li>Pokud se platbu nepodaří strhnout, platební brána ji zkusí znovu a objednatele vyzve k aktualizaci karty. Když neproběhne ani poté, předplatné skončí a profil se vrátí na základní.</li>
+    <li>Změnu ceny oznámí provozovatel objednateli e-mailem nejméně 30 dní předem. Objednatel může předplatné do té doby zrušit.</li>
+    <li>Za popis a fotografie, které ordinace do profilu dodá, odpovídá ordinace, včetně práv k jejich použití. Provozovatel může nevhodný nebo zavádějící obsah odmítnout.</li>
+  </ul>
   <h2>Kontakt</h2>
   <p><a href={`mailto:${SITE.contactEmail}`}>{SITE.contactEmail}</a></p>
 </Page>

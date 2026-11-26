@@ -1,0 +1,17 @@
+---
+import Page from '../../components/Page.astro';
+import ApiForms from '../../components/ApiForms.astro';
+import Honeypot from '../../components/Honeypot.astro';
+import { SITE } from '../../lib/site';
+---
+<Page title="Správa předplatného prémiového profilu" description="Změna platební karty, faktury a zrušení předplatného prémiového profilu." crumb="Správa předplatného" noindex>
+  <h1>Správa předplatného</h1>
+  <p>Zadejte e-mail, se kterým jste prémiový profil objednali. Pošlu vám na něj odkaz, kde změníte platební kartu, stáhnete faktury nebo předplatné zrušíte. Zrušení platí ke konci zaplaceného období.</p>
+  <form data-api="/api/billing-portal" class="panel">
+    <Honeypot />
+    <div class="field"><label for="bp-email">E-mail</label><input id="bp-email" name="email" type="email" required autocomplete="email" /></div>
+    <button class="btn" type="submit">Poslat odkaz</button>
+  </form>
+  <p class="small muted" style="margin-top:20px">Nedaří se? Napište mi na <a href={`mailto:${SITE.contactEmail}`}>{SITE.contactEmail}</a>.</p>
+  <ApiForms />
+</Page>

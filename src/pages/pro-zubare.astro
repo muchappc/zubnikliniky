@@ -38,9 +38,33 @@ const clinics = [...(await getClinics())].sort((a, b) => a.display_name.localeCo
             <li>Výrazné označení ve výpisech</li>
             <li>Měsíční přehled: kolik lidí profil vidělo, klikalo na telefon a web a kolik poslalo poptávku</li>
           </ul>
+          <a class="btn" href="#objednat" style="margin-top:18px">Objednat a zaplatit kartou</a>
+          <p class="small muted" style="margin:10px 0 0">Platba kartou se opakuje automaticky. Zrušit můžete kdykoli.</p>
         </div>
       </div>
       <p class="note small"><strong>Pořadí si koupit nelze.</strong> Ve výpisech řadíme podle toho, jestli ordinace bere nové pacienty, a podle hodnocení pacientů. Prémiový profil je jen vizuálně odlišený a jasně označený. Recenze nemažeme na přání – můžete na ně veřejně odpovědět, a pokud recenze porušuje pravidla, nahlaste ji.</p>
+
+      <section class="panel order" id="objednat" aria-labelledby="ord-h">
+        <h2 id="ord-h">Objednat prémiový profil</h2>
+        <p class="muted">Vyberte ordinaci a způsob platby. Zaplatíte kartou na zabezpečené stránce Stripe, prémium se zapne hned po zaplacení. Platba se pak opakuje automaticky každý měsíc nebo rok, dokud předplatné nezrušíte.</p>
+        <form data-api="/api/checkout">
+          <Honeypot />
+          <div class="field">
+            <label for="or-clinic">Ordinace</label>
+            <input id="or-clinic" list="clinic-options" required placeholder="Začněte psát název nebo jméno lékaře" data-slug-target="or-slug" />
+            <input type="hidden" name="clinic_slug" id="or-slug" />
+          </div>
+          <fieldset class="field plans">
+            <legend>Platba</legend>
+            <label class="plan"><input type="radio" name="plan" value="mesicni" checked /> <span><strong>{SITE.premiumPrice}</strong><br /><span class="small muted">strhává se každý měsíc</span></span></label>
+            <label class="plan"><input type="radio" name="plan" value="rocni" /> <span><strong>{SITE.premiumPriceYear}</strong><br /><span class="small muted">2 měsíce zdarma, strhává se jednou ročně</span></span></label>
+          </fieldset>
+          <div class="field"><label for="or-email">E-mail pro faktury a správu předplatného</label><input id="or-email" name="email" type="email" required autocomplete="email" /></div>
+          <label class="check field"><input type="checkbox" name="terms" required /> <span>Souhlasím s <a href="/podminky#predplatne">podmínkami předplatného</a> a s tím, že platba se bude automaticky opakovat, dokud předplatné nezruším.</span></label>
+          <button class="btn" type="submit">Pokračovat k platbě kartou →</button>
+          <p class="small muted" style="margin:12px 0 0">Ceny jsou konečné, provozovatel není plátce DPH. Fakturu vystaví Stripe automaticky. Už předplatné máte? <a href="/pro-zubare/predplatne">Změna karty nebo zrušení</a>.</p>
+        </form>
+      </section>
 
       <aside class="panel marketing" aria-labelledby="mkt-h">
         <div>
@@ -61,7 +85,7 @@ const clinics = [...(await getClinics())].sort((a, b) => a.display_name.localeCo
         <Honeypot />
         <div class="field">
           <label for="cl-clinic">Ordinace</label>
-          <input id="cl-clinic" name="clinic_name" list="clinic-options" required placeholder="Začněte psát název nebo jméno lékaře" />
+          <input id="cl-clinic" name="clinic_name" list="clinic-options" required placeholder="Začněte psát název nebo jméno lékaře" data-slug-target="cl-slug" />
           <datalist id="clinic-options">{clinics.map((c) => <option value={`${c.display_name} – ${c.street}, ${c.city}`} data-slug={c.slug} />)}</datalist>
           <input type="hidden" name="clinic_slug" id="cl-slug" />
         </div>
@@ -77,7 +101,7 @@ const clinics = [...(await getClinics())].sort((a, b) => a.display_name.localeCo
           <label for="cl-int">Co chcete udělat</label>
           <select id="cl-int" name="interest">
             <option value="udaje">Upravit údaje (zdarma)</option>
-            <option value="premium">Objednat prémiový profil</option>
+            <option value="premium">Dotaz k prémiovému profilu</option>
             <option value="odpoved">Odpovědět na recenzi</option>
           </select>
         </div>
@@ -103,14 +127,23 @@ const clinics = [...(await getClinics())].sort((a, b) => a.display_name.localeCo
   .marketing h2 { font-size: 1.35rem; margin: 2px 0 8px; }
   .marketing .eyebrow { text-transform: uppercase; letter-spacing: .06em; font-weight: 650; color: var(--accent, #0b6f70); margin: 0; }
   .mkt-cta { display: flex; flex-direction: column; gap: 10px; }
+  .order { margin-top: 40px; scroll-margin-top: 20px; }
+  .order h2 { font-size: 1.35rem; }
+  .plans { border: 0; padding: 0; display: grid; gap: 10px; }
+  @media (min-width: 640px) { .plans { grid-template-columns: 1fr 1fr; } }
+  .plans legend { font-weight: 600; margin-bottom: 8px; }
+  .plan { display: flex; gap: 10px; align-items: flex-start; border: 1px solid var(--line, #d9e3e3); border-radius: 10px; padding: 12px 14px; cursor: pointer; }
+  .plan:has(input:checked) { border-color: var(--premium, #6b4fd1); box-shadow: inset 0 0 0 1px var(--premium, #6b4fd1); }
   .tier-premium { border-color: #cbbcef; box-shadow: inset 4px 0 0 var(--premium); }
 </style>
 <script>
-  const input = document.getElementById('cl-clinic') as HTMLInputElement;
-  const slug = document.getElementById('cl-slug') as HTMLInputElement;
   const opts = [...document.querySelectorAll<HTMLOptionElement>('#clinic-options option')];
-  const sync = () => { slug.value = opts.find((o) => o.value === input.value)?.dataset.slug ?? ''; };
-  input.addEventListener('change', sync);
   const pre = new URLSearchParams(location.search).get('ordinace');
-  if (pre) { const o = opts.find((o) => o.dataset.slug === pre); if (o) { input.value = o.value; sync(); } }
+  document.querySelectorAll<HTMLInputElement>('input[data-slug-target]').forEach((input) => {
+    const slug = document.getElementById(input.dataset.slugTarget!) as HTMLInputElement;
+    const sync = () => { slug.value = opts.find((o) => o.value === input.value)?.dataset.slug ?? ''; };
+    input.addEventListener('change', sync);
+    input.addEventListener('input', sync);
+    if (pre) { const o = opts.find((o) => o.dataset.slug === pre); if (o) { input.value = o.value; sync(); } }
+  });
 </script>

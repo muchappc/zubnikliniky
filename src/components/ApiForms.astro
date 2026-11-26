@@ -21,6 +21,7 @@
         const res = await fetch(form.dataset.api!, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(data) });
         const out = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(out.error || 'Odeslání se nepovedlo. Zkuste to prosím znovu za chvíli.');
+        if (out.url) { msg.dataset.kind = 'ok'; msg.textContent = 'Přesměrovávám na platební bránu…'; msg.hidden = false; location.href = out.url; return; }
         msg.dataset.kind = 'ok';
         msg.textContent = out.message || form.dataset.ok || 'Odesláno.';
         form.querySelectorAll('input:not([type=hidden]):not([type=checkbox]), textarea').forEach((el) => ((el as HTMLInputElement).value = ''));
