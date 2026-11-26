@@ -1,0 +1,25 @@
+name: Stažení dat NRPZS (zubní ordinace)
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 4 3 * *'   # 3. den v měsíci
+  push:
+    paths: ['.github/workflows/nrpzs.yml', 'scripts/fetch-nrpzs.mjs']
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm i --no-save csv-parse csv-stringify
+      - run: node scripts/fetch-nrpzs.mjs
+      - name: Commit
+        run: |
+          git config user.name "nrpzs-bot"
+          git config user.email "actions@github.com"
+          git add data/nrpzs-zubni.csv
+          git diff --cached --quiet || git commit -m "Data NRPZS: zubní ordinace ČR [skip ci]"
+          git push
