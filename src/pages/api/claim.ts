@@ -17,7 +17,7 @@ export const POST = handler(async (b) => {
   }
   const { error } = await db().from('claims').insert({ clinic_id, clinic_name, contact_name, email: mail, phone, interest, message });
   if (error) throw error;
-  if (adminEmail()) await sendMail({
+  if (adminEmail().length) await sendMail({
     to: adminEmail(), replyTo: mail,
     subject: `${LABEL[interest]}: ${clinic_name}`,
     text: `${contact_name}\n${mail}\n${phone}\n\n${message}\n\n${slug ? `Profil: ${siteUrl()}/zubar/${slug}\n` : ''}Administrace: ${siteUrl()}/admin#zadosti`,

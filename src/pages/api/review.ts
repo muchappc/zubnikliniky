@@ -33,6 +33,6 @@ export const POST = handler(async (b, { ip }) => {
     text: `Dobrý den,\n\nděkujeme za recenzi ordinace ${clinic.display_name}. Zveřejníme ji, jakmile ji potvrdíte kliknutím na tento odkaz (platí 7 dní):\n\n${link}\n\nPokud jste recenzi nepsali, e-mail ignorujte – nic se nezveřejní.\n\nzubnikliniky.cz`,
   });
   if (!sent) console.warn('Recenze uložena, ale ověřovací e-mail se neodeslal', clinic.id);
-  if (adminEmail()) await sendMail({ to: adminEmail(), subject: `Nová recenze (${rating}★) – ${clinic.display_name}`, text: `${author}:\n${text}\n\nČeká na potvrzení e-mailem. Moderace: ${siteUrl()}/admin#recenze` });
+  if (adminEmail().length) await sendMail({ to: adminEmail(), subject: `Nová recenze (${rating}★) – ${clinic.display_name}`, text: `${author}:\n${text}\n\nČeká na potvrzení e-mailem. Moderace: ${siteUrl()}/admin#recenze` });
   return json({ ok: true, message: 'Děkujeme! Poslali jsme vám e-mail s odkazem. Recenzi zveřejníme, až na něj kliknete.' });
 });

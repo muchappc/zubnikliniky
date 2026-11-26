@@ -71,7 +71,8 @@ export async function getClinic(id: unknown) {
 }
 
 export const siteUrl = () => env('PUBLIC_SITE_URL') || 'https://www.zubnikliniky.cz';
-export const adminEmail = () => env('ADMIN_EMAIL');
+// ADMIN_EMAIL může obsahovat víc adres oddělených čárkou (např. leady@ a soukromý Gmail).
+export const adminEmail = () => (env('ADMIN_EMAIL') || '').split(',').map((s) => s.trim()).filter(Boolean);
 
 const escapeHtml = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 

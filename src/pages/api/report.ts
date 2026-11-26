@@ -12,7 +12,7 @@ export const POST = handler(async (b) => {
   if (error) throw error;
   let name = '';
   if (clinic_id) name = (await db().from('clinics').select('display_name, slug').eq('id', clinic_id).maybeSingle()).data?.display_name ?? '';
-  if (adminEmail()) await sendMail({
+  if (adminEmail().length) await sendMail({
     to: adminEmail(), replyTo: mail || undefined,
     subject: kind === 'review' ? `Nahlášená recenze – ${name}` : name ? `Oprava údajů – ${name}` : 'Zpráva z kontaktního formuláře',
     text: `${message}\n\nOd: ${mail || 'neuvedeno'}\nAdministrace: ${siteUrl()}/admin#hlaseni`,

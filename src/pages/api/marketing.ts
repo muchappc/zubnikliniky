@@ -9,7 +9,7 @@ export const POST = handler(async (b) => {
   const phone = str(b.phone, { max: 30, name: 'Telefon' });
   const message = str(b.message, { max: 4000, name: 'Zpráva' });
   const source = str(b.source, { max: 60, name: 'Zdroj' }) || 'web';
-  if (!adminEmail()) throw new HttpError(503, 'Formulář zatím není nastavený. Napište mi prosím e-mailem.');
+  if (!adminEmail().length) throw new HttpError(503, 'Formulář zatím není nastavený. Napište mi prosím e-mailem.');
   await sendMail({
     to: adminEmail(), replyTo: mail,
     subject: `Zájem o marketing (${source}): ${clinic_name}`,

@@ -34,7 +34,7 @@ export const POST = handler(async (b, { ip }) => {
   if (direct) {
     await sendMail({ to: c.email, replyTo: mail, subject: `Nový pacient: ${type} – ${name}`, text: `${body}\n\nNa tento e-mail můžete rovnou odpovědět – odpověď půjde pacientovi.` });
   }
-  if (adminEmail()) await sendMail({ to: adminEmail(), replyTo: mail, subject: `${direct ? '[předáno] ' : '[PŘEDAT] '}Poptávka – ${c.display_name}`, text: body });
+  if (adminEmail().length) await sendMail({ to: adminEmail(), replyTo: mail, subject: `${direct ? '[předáno] ' : '[PŘEDAT] '}Poptávka – ${c.display_name}`, text: body });
   await sendMail({
     to: mail,
     subject: `Poptávka odeslána: ${c.display_name}`,
