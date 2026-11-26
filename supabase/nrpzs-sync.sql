@@ -3,6 +3,8 @@
 -- 2) nrpzs_apply()          – promítne ji do clinics a pracovní tabulku vyprázdní
 -- Ruční úpravy (zobrazovaný název, popis, fotky, pojišťovny, příjem pacientů, prémium) se nepřepisují.
 
+create index if not exists clinics_nrpzs_id_idx on public.clinics (nrpzs_id);
+
 create table if not exists public.nrpzs_staging (
   nrpzs_id text primary key, all_ids text[], ico text, legal_name text, display_name text, categories text[],
   is_clinic boolean, obory_raw text, street text, zip text, city text, city_part text, okres text, kraj text,
@@ -40,6 +42,11 @@ begin
     raise exception 'Podezřele málo záznamů z registru (%), import přeskočen', staged;
   end if;
 
+  create temp table ids on commit drop as
+    select s.nrpzs_id as rep, unnest(s.all_ids) as id from nrpzs_staging s;
+  create index on ids (id);
+  analyze ids;
+
   update clinics c set
     nrpzs_id = s.nrpzs_id, ico = s.ico, legal_name = case when c.premium then c.legal_name else s.legal_name end,
     obory_raw = s.obory_raw, street = s.street, zip = s.zip, city = s.city, okres = s.okres, kraj = s.kraj,
@@ -47,8 +54,8 @@ begin
     lat = coalesce(s.lat, c.lat), lng = coalesce(s.lng, c.lng),
     phone = coalesce(nullif(c.phone,''), s.phone, ''), email = coalesce(nullif(c.email,''), s.email, ''), web = coalesce(nullif(c.web,''), s.web, ''),
     updated_at = now()
-  from nrpzs_staging s
-  where c.nrpzs_id = any(s.all_ids) and not c.hidden
+  from ids i join nrpzs_staging s on s.nrpzs_id = i.rep
+  where c.nrpzs_id = i.id and not c.hidden
     and (c.nrpzs_id, c.ico, c.legal_name, c.obory_raw, c.street, c.zip, c.city, c.okres, c.kraj, c.lat, c.lng)
         is distinct from (s.nrpzs_id, s.ico, case when c.premium then c.legal_name else s.legal_name end, s.obory_raw, s.street, s.zip, s.city, s.okres, s.kraj, coalesce(s.lat, c.lat), coalesce(s.lng, c.lng));
   get diagnostics upd = row_count;
@@ -56,7 +63,7 @@ begin
   update clinics c set hidden = true, updated_at = now(),
     admin_note = coalesce(c.admin_note,'') || ' Skryto ' || to_char(now(), 'DD.MM.YYYY') || ': už není v NRPZS (ukončená činnost).'
   where c.nrpzs_id is not null and not c.hidden and not c.premium
-    and not exists (select 1 from nrpzs_staging s where c.nrpzs_id = any(s.all_ids));
+    and not exists (select 1 from ids i where i.id = c.nrpzs_id);
   get diagnostics hid = row_count;
 
   insert into clinics (slug, nrpzs_id, ico, legal_name, display_name, categories, is_clinic, obory_raw, street, zip, city, city_part, okres, kraj, lat, lng, phone, email, web,
@@ -65,7 +72,7 @@ begin
     s.nrpzs_id, s.ico, s.legal_name, s.display_name, s.categories, s.is_clinic, s.obory_raw, s.street, s.zip, s.city, s.city_part, s.okres, s.kraj, s.lat, s.lng,
     coalesce(s.phone,''), coalesce(s.email,''), coalesce(s.web,''), '', '{}', '{}', '', false, false
   from nrpzs_staging s
-  where not exists (select 1 from clinics c where c.nrpzs_id = any(s.all_ids));
+  where not exists (select 1 from ids i join clinics c on c.nrpzs_id = i.id where i.rep = s.nrpzs_id);
   get diagnostics ins = row_count;
 
   truncate nrpzs_staging;
@@ -74,3 +81,5 @@ end $$;
 
 revoke all on function public.nrpzs_stage_rows(jsonb), public.nrpzs_apply(), public.nrpzs_clear() from public;
 grant execute on function public.nrpzs_stage_rows(jsonb), public.nrpzs_apply(), public.nrpzs_clear() to anon;
+alter function public.nrpzs_apply() set statement_timeout = '120s';
+alter function public.nrpzs_stage_rows(jsonb) set statement_timeout = '60s';
