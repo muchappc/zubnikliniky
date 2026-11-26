@@ -42,6 +42,19 @@ const clinics = [...(await getClinics())].sort((a, b) => a.display_name.localeCo
       </div>
       <p class="note small"><strong>Pořadí si koupit nelze.</strong> Ve výpisech řadíme podle toho, jestli ordinace bere nové pacienty, a podle hodnocení pacientů. Prémiový profil je jen vizuálně odlišený a jasně označený. Recenze nemažeme na přání – můžete na ně veřejně odpovědět, a pokud recenze porušuje pravidla, nahlaste ji.</p>
 
+      <aside class="panel marketing" aria-labelledby="mkt-h">
+        <div>
+          <p class="eyebrow small">Marketing pro zubní ordinace</p>
+          <h2 id="mkt-h">Potřebujete víc nových pacientů?</h2>
+          <p>Vedle katalogu dělám i reklamu pro zubní ordinace a kliniky na Facebooku, Instagramu a Googlu. Soukromé klinice v Ostravě jsem takhle za tři týdny přivedl přes 100 poptávek nových pacientů a zaplnil jí termíny na 3 měsíce dopředu.</p>
+          <p class="small muted" style="margin:0">Hodí se hlavně pro soukromé kliniky, nové ordinace a dentální hygienu, které chtějí rychle obsadit volné termíny.</p>
+        </div>
+        <div class="mkt-cta">
+          <a class="btn" href="/pro-zubare/pripadova-studie">Prohlédnout případovou studii →</a>
+          <a class="btn btn-ghost" href="/pro-zubare/pripadova-studie#formular">Chci nabídku na marketing</a>
+        </div>
+      </aside>
+
       <h2 style="margin-top:48px" id="formular">Upravit údaje nebo objednat prémiový profil</h2>
       <p class="muted">Ozveme se do dvou pracovních dnů. Změny údajů zveřejníme po krátkém ověření, že jste z dané ordinace.</p>
       <form data-api="/api/claim" class="panel" data-ok="Děkujeme, žádost máme. Ozveme se vám do dvou pracovních dnů.">
@@ -85,6 +98,11 @@ const clinics = [...(await getClinics())].sort((a, b) => a.display_name.localeCo
   .price { font-size: 1.5rem; font-weight: 750; letter-spacing: -0.02em; margin-bottom: 16px; }
   .tier ul { margin: 0; padding-left: 1.1em; }
   .tier li { margin-bottom: 8px; }
+  .marketing { margin-top: 40px; display: grid; gap: 20px; align-items: center; border-color: #b9dcd0; background: linear-gradient(135deg, #f1faf6, #fff); }
+  @media (min-width: 800px) { .marketing { grid-template-columns: 1fr auto; } }
+  .marketing h2 { font-size: 1.35rem; margin: 2px 0 8px; }
+  .marketing .eyebrow { text-transform: uppercase; letter-spacing: .06em; font-weight: 650; color: var(--accent, #0b6f70); margin: 0; }
+  .mkt-cta { display: flex; flex-direction: column; gap: 10px; }
   .tier-premium { border-color: #cbbcef; box-shadow: inset 4px 0 0 var(--premium); }
 </style>
 <script>
