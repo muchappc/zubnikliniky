@@ -32,6 +32,10 @@ const ld = [{
         <h1>Najděte zubaře, který vás opravdu vezme.</h1>
         <p class="lead">{total.toLocaleString('cs-CZ')} zubních ordinací, klinik a dentálních hygien v celé České republice. Ke každé doplňujeme, jestli bere nové pacienty a se kterými pojišťovnami má smlouvu.</p>
         <form class="search panel" action="/hledat" method="get" id="hero-search">
+          <div class="field" style="margin-bottom:14px">
+            <label for="s-q">Ordinace, lékař nebo město</label>
+            <input id="s-q" name="q" type="search" placeholder="Např. MUDr. Nováková, Eurodental, Brno, Sokolská…" autocomplete="off" />
+          </div>
           <div class="search-grid">
             <div>
               <label for="s-kraj">Kraj</label>

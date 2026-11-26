@@ -13,8 +13,21 @@ const links = [
       <svg width="26" height="26" viewBox="0 0 32 32" aria-hidden="true"><path fill="#0b6f70" d="M16 5c-2.2-1.6-5.3-2.4-8-.9C4.6 6 4.3 10.6 5.4 14.4c.8 2.8 1.4 5.2 1.8 8.3.4 3.1 1.1 5.3 2.7 5.3 1.9 0 2.3-3.3 3-6.2.5-2.1 1.4-3.2 3.1-3.2s2.6 1.1 3.1 3.2c.7 2.9 1.1 6.2 3 6.2 1.6 0 2.3-2.2 2.7-5.3.4-3.1 1-5.5 1.8-8.3 1.1-3.8.8-8.4-2.6-10.3-2.7-1.5-5.8-.7-8 .9Z"/><circle cx="23.5" cy="8.5" r="3.6" fill="#23875a" stroke="#fff" stroke-width="1.6"/></svg>
       <b>zubni<span>kliniky</span>.cz</b>
     </a>
+    {path !== '/hledat' && (
+      <form class="hsearch" action="/hledat" method="get" role="search">
+        <input name="q" type="search" placeholder="Hledat ordinaci, lékaře, město…" aria-label="Hledat ordinaci" />
+        <button type="submit" aria-label="Hledat"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="m20 20-4-4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>
+      </form>
+    )}
     <nav class="nav" aria-label="Hlavní navigace">
       {links.map((l) => <a href={l.href} aria-current={path.startsWith(l.href) ? 'page' : undefined}>{l.label}</a>)}
     </nav>
   </div>
 </header>
+<style>
+  .hsearch { display: flex; align-items: center; flex: 1 1 220px; max-width: 360px; margin: 0 18px; border: 1.5px solid var(--line, #d9e3e3); border-radius: 999px; background: #fff; overflow: hidden; }
+  .hsearch input { border: 0; outline: 0; padding: 8px 4px 8px 14px; font: inherit; font-size: 0.93rem; width: 100%; min-width: 0; background: transparent; }
+  .hsearch button { border: 0; background: transparent; padding: 6px 12px 6px 6px; color: var(--brand, #0b6f70); cursor: pointer; display: flex; }
+  .hsearch:focus-within { border-color: var(--brand, #0b6f70); }
+  @media (max-width: 760px) { .hsearch { order: 3; flex-basis: 100%; max-width: none; margin: 10px 0 0; } }
+</style>

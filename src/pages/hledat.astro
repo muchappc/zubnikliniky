@@ -10,7 +10,7 @@ const cats = await getCategoryCounts();
     <div class="wrap">
       <h1>Hledat zubaře</h1>
       <form id="sf" class="filters" role="search" onsubmit="return false" style="position:static">
-        <input name="q" type="search" placeholder="Jméno lékaře, ordinace nebo ulice" aria-label="Hledaný text" style="flex:1 1 260px;border-radius:999px;padding:8px 14px" />
+        <input name="q" type="search" placeholder="Jméno lékaře, ordinace, město nebo ulice" autofocus aria-label="Hledaný text" style="flex:1 1 260px;border-radius:999px;padding:8px 14px" />
         <select name="kraj" aria-label="Kraj"><option value="">Celá ČR</option>{kraje.map((k) => <option value={k.slug}>{k.name}</option>)}</select>
         <input type="hidden" name="mesto" />
         <select name="obor" aria-label="Obor"><option value="">Všechny obory</option>{cats.map((c) => <option value={c.slug}>{c.name}</option>)}</select>
@@ -45,6 +45,11 @@ const cats = await getCategoryCounts();
     const hits = rows.filter((r, i) =>
       q.every((w) => hay[i].includes(w)) && (!mesto || r[4] === mesto) && (!kraj || r[14] === kraj) && (!obor || r[6].split(' ').includes(obor)) &&
       (!poj || r[7].split(' ').includes(poj)) && (!nove || r[8] === 'ano' || r[8] === 'omezene'));
+    if (q.length) {
+      const full = q.join(' ');
+      const score = (r: any) => { const n = fold(r[1] + ' ' + r[12]); return n.includes(full) ? 0 : q.every((w) => n.includes(w)) ? 1 : 2; };
+      hits.sort((a, b) => score(a) - score(b));
+    }
     count.textContent = hits.length ? `Nalezeno: ${hits.length}` : 'Nic jsme nenašli. Zkuste uvolnit filtry nebo hledat jen část jména.';
     out.innerHTML = hits.slice(0, 200).map((r) => `
       <li class="row" data-premium="${!!r[9]}"><a href="/zubar/${r[0]}"><div>
