@@ -20,6 +20,6 @@ jobs:
         run: |
           git config user.name "nrpzs-bot"
           git config user.email "actions@github.com"
-          git add data/nrpzs-zubni.csv
+          git add -f data/nrpzs-zubni.csv
           git diff --cached --quiet || git commit -m "Data NRPZS: zubní ordinace ČR [skip ci]"
           git push
