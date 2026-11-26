@@ -1,0 +1,16 @@
+name: Jednorázový import NRPZS do Supabase (staging)
+on:
+  push:
+    paths: ['.github/workflows/nrpzs-stage.yml']
+jobs:
+  stage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm i --no-save csv-parse
+      - run: node scripts/import-nrpzs.mjs
+      - run: node scripts/stage-nrpzs.mjs
+        env:
+          IMPORT_TOKEN: 2628e3c2db461fb8d474771df6de3169244c8abaacda21ef
