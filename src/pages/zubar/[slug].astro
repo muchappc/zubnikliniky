@@ -22,6 +22,8 @@ const mapQuery = encodeURIComponent(`${c.display_name}, ${address}`);
 const mapyUrl = c.lat != null ? `https://mapy.cz/zakladni?q=${mapQuery}&x=${c.lng}&y=${c.lat}&z=17` : `https://mapy.cz/zakladni?q=${mapQuery}`;
 const fmtDate = (d: string) => new Date(d).toLocaleDateString('cs-CZ', { day: 'numeric', month: 'long', year: 'numeric' });
 const allInsurers = c.insurers.length === INSURERS.length;
+// Telefon, e-mail a web zobrazujeme jen u prémiových profilů. Ostatním pacientům zprostředkujeme poptávku.
+const showContact = c.premium;
 
 const crumbs = [{ name: c.city, href: `/mesto/${c.city_slug}` }];
 if (c.city_part && c.part_slug) crumbs.push({ name: c.city_part, href: `/mesto/${c.city_slug}/${c.part_slug}` });
@@ -35,8 +37,8 @@ const ld: any = {
   url: new URL(`/zubar/${c.slug}`, SITE.url).toString(),
   address: { '@type': 'PostalAddress', streetAddress: c.street, postalCode: c.zip, addressLocality: c.city, addressRegion: c.kraj, addressCountry: 'CZ' },
   ...(c.lat != null ? { geo: { '@type': 'GeoCoordinates', latitude: c.lat, longitude: c.lng } } : {}),
-  ...(c.phone ? { telephone: c.phone } : {}),
-  ...(c.web ? { sameAs: [c.web] } : {}),
+  ...(showContact && c.phone ? { telephone: c.phone } : {}),
+  ...(showContact && c.web ? { sameAs: [c.web] } : {}),
   ...(c.photos[0] ? { image: c.photos[0] } : {}),
   medicalSpecialty: 'Dentistry',
   ...(c.rating_count > 0 ? { aggregateRating: { '@type': 'AggregateRating', ratingValue: c.rating_avg, reviewCount: c.rating_count, bestRating: 5, worstRating: 1 } } : {}),
@@ -116,7 +118,9 @@ const desc = `${c.display_name} – ${mainCat?.name.toLowerCase() ?? 'zubní ord
             <section class="block">
               <h2 class="visually-hidden">Fotografie</h2>
               <div class="gallery">
-                {c.photos.slice(0, 5).map((src, i) => <img src={src} alt={`${c.display_name} – fotografie ${i + 1}`} loading="lazy" width="480" height="320" />)}
+                {c.photos.slice(0, 5).map((src, i) => (
+                  <a href={src} target="_blank" rel="noopener"><img src={src} alt={`${c.display_name} – fotografie ${i + 1}`} loading={i === 0 ? 'eager' : 'lazy'} width="768" height="384" /></a>
+                ))}
               </div>
             </section>
           )}
@@ -133,7 +137,7 @@ const desc = `${c.display_name} – ${mainCat?.name.toLowerCase() ?? 'zubní ord
             <p class="muted">
               {c.premium && c.email
                 ? 'Poptávku pošleme přímo ordinaci. Ozve se vám telefonicky nebo e-mailem.'
-                : 'Poptávku předáme ordinaci a dáme vám vědět, jak odpověděla. Pokud spěcháte, zavolejte přímo.'}
+                : 'Napište, co potřebujete. Poptávku předáme ordinaci a dáme vám vědět, jak odpověděla.'}
             </p>
             <form data-api="/api/inquiry" class="panel" data-ok="Hotovo, poptávku jsme přijali. Potvrzení najdete v e-mailu.">
               <input type="hidden" name="clinic_id" value={c.id} />
@@ -220,15 +224,15 @@ const desc = `${c.display_name} – ${mainCat?.name.toLowerCase() ?? 'zubní ord
           <div class="panel contact">
             <h2 class="h3">Kontakt</h2>
             <ul>
-              {c.phone && <li><span class="k">Telefon</span><a href={`tel:${c.phone.replace(/\s/g, '')}`} data-track="phone">{c.phone}</a></li>}
-              {c.email && <li><span class="k">E-mail</span><a href={`mailto:${c.email}`} data-track="email">{c.email}</a></li>}
-              {c.web && <li><span class="k">Web</span><a href={c.web} target="_blank" rel={c.premium ? 'noopener' : 'noopener nofollow'} data-track="web">{c.web.replace(/^https?:\/\/(www\.)?/, '')}</a></li>}
+              {showContact && c.phone && <li><span class="k">Telefon</span><a href={`tel:${c.phone.replace(/\s/g, '')}`} data-track="phone">{c.phone}</a></li>}
+              {showContact && c.email && <li><span class="k">E-mail</span><a href={`mailto:${c.email}`} data-track="email">{c.email}</a></li>}
+              {showContact && c.web && <li><span class="k">Web</span><a href={c.web} target="_blank" rel="noopener" data-track="web">{c.web.replace(/^https?:\/\/(www\.)?/, '')}</a></li>}
               <li><span class="k">Adresa</span><span>{c.street}<br />{c.zip} {c.city}{c.city_part && c.city_part !== c.city && <><br /><span class="muted small">{c.city_part}</span></>}</span></li>
             </ul>
-            {!c.phone && !c.email && !c.web && <p class="small muted">Kontakt zatím nemáme. Víte ho? <a href="#" data-open-report>Doplňte ho</a>.</p>}
+            {!showContact && <p class="small muted" style="margin:14px 0 0">Termín vám domluvíme: pošlete poptávku a předáme ji ordinaci.</p>}
             <div class="contact-actions">
-              {c.phone && <a class="btn" href={`tel:${c.phone.replace(/\s/g, '')}`} data-track="phone">Zavolat</a>}
-              <a class="btn btn-ghost" href="#poptavka">Poptat termín</a>
+              {showContact && c.phone && <a class="btn" href={`tel:${c.phone.replace(/\s/g, '')}`} data-track="phone">Zavolat</a>}
+              <a class={showContact && c.phone ? 'btn btn-ghost' : 'btn'} href="#poptavka">Poptat termín</a>
               <a class="btn btn-ghost" href={mapyUrl} target="_blank" rel="noopener" data-track="map">Mapa</a>
             </div>
             {c.opening_hours && (<><h3 class="small" style="margin-top:18px">Ordinační hodiny</h3><pre class="hours">{c.opening_hours}</pre></>)}
@@ -275,8 +279,9 @@ const desc = `${c.display_name} – ${mainCat?.name.toLowerCase() ?? 'zubní ord
   .report summary { cursor: pointer; color: var(--brand); font-size: 0.92rem; }
   .report form { margin-top: 12px; }
   .block { margin-top: 40px; }
-  .gallery { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
-  .gallery img { border-radius: var(--radius-s); aspect-ratio: 3/2; object-fit: cover; width: 100%; }
+  .gallery { display: grid; gap: 8px; grid-template-columns: repeat(2, 1fr); }
+  .gallery a:first-child { grid-column: 1 / -1; }
+  .gallery img { border-radius: var(--radius-s); aspect-ratio: 2/1; object-fit: cover; width: 100%; height: auto; }
   .contact h2 { font-size: 1.1rem; }
   .contact ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
   .contact li { display: grid; gap: 2px; word-break: break-word; }

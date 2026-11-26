@@ -20,8 +20,9 @@ const clinics = [...(await getClinics())].sort((a, b) => a.display_name.localeCo
           <p class="price">Zdarma</p>
           <ul>
             <li>Stav přijímání nových pacientů s datem ověření</li>
-            <li>Smluvní pojišťovny a ordinační hodiny</li>
-            <li>Telefon, e-mail a web</li>
+            <li>Smluvní pojišťovny</li>
+            <li>Adresa, mapa a ordinační hodiny</li>
+            <li>Poptávky pacientů vám předáme</li>
             <li>Odpovědi na recenze pacientů</li>
             <li>Oprava zařazení do oborů a názvu ordinace</li>
           </ul>
@@ -31,9 +32,10 @@ const clinics = [...(await getClinics())].sort((a, b) => a.display_name.localeCo
           <p class="price">{SITE.premiumPrice}<span class="muted small"> nebo {SITE.premiumPriceYear}</span></p>
           <ul>
             <li>Vše ze základního profilu</li>
+            <li>Telefon, e-mail a odkaz na váš web přímo na profilu</li>
             <li>Poptávky termínů od pacientů chodí rovnou do vašeho e-mailu</li>
             <li>Popis ordinace a až 5 fotografií</li>
-            <li>Výrazné označení ve výpisech a odkaz na váš web</li>
+            <li>Výrazné označení ve výpisech</li>
             <li>Měsíční přehled: kolik lidí profil vidělo, klikalo na telefon a web a kolik poslalo poptávku</li>
           </ul>
         </div>
