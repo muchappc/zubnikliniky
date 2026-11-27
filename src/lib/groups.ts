@@ -12,6 +12,8 @@ export const GROUPS: Group[] = [
   { name: 'Hledám zubaře v Pardubickém kraji', url: 'https://www.facebook.com/groups/1633479730669115', kraj: 'Pardubický kraj' },
   { name: 'Hledám zubaře v Libereckém kraji', url: 'https://www.facebook.com/groups/1924588168376310', kraj: 'Liberecký kraj' },
   { name: 'Hledám zubaře v kraji Vysočina', url: 'https://www.facebook.com/groups/1864287444469758', kraj: 'Kraj Vysočina' },
+  { name: 'Hledám zubaře v Olomouckém kraji', url: 'https://www.facebook.com/groups/689571717325189', kraj: 'Olomoucký kraj' },
+  { name: 'Hledám zubaře v Karlovarském kraji', url: 'https://www.facebook.com/groups/1117349163573778', kraj: 'Karlovarský kraj' },
   { name: 'Hledám zubaře ve Zlínském kraji', url: 'https://www.facebook.com/groups/832553079787499', kraj: 'Zlínský kraj' },
 ];
 export const GROUP_BY_KRAJ: Record<string, Group> = Object.fromEntries(GROUPS.map((g) => [g.kraj, g]));

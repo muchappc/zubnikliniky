@@ -16,7 +16,6 @@ const [main, ...rest] = GROUPS;
   <ul class="groups">
     {rest.map((g) => <li><a href={g.url} target="_blank" rel="noopener"><strong>{g.name}</strong><span class="small muted">{g.kraj}</span></a></li>)}
   </ul>
-  <p class="small muted" style="margin-top:24px">Skupinu pro svůj kraj nevidíte? Zatím ji nemám. Přidejte se do nejbližší, nebo hledejte přímo v <a href="/mesta">přehledu ordinací podle krajů</a>.</p>
 </Page>
 <style>
   .group-main { display: grid; gap: 6px; text-decoration: none; color: inherit; margin: 24px 0 36px; border-color: #b9dcd0; background: linear-gradient(135deg, #f1faf6, #fff); }
