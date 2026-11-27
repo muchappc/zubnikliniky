@@ -4,6 +4,7 @@ import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import ClinicRow from '../../components/ClinicRow.astro';
 import { getKraje, type Kraj } from '../../lib/data';
 import { CATEGORIES, plural } from '../../lib/taxonomy.mjs';
+import { GROUP_BY_KRAJ } from '../../lib/groups';
 
 export async function getStaticPaths() {
   const kraje = await getKraje();
@@ -15,6 +16,7 @@ const accepting = clinics.filter((c) => c.accepts_new === 'ano' || c.accepts_new
 const premium = clinics.filter((c) => c.premium && !accepting.includes(c)).slice(0, 6);
 const top = k.cities.slice(0, 24);
 const alpha = [...k.cities].sort((a, b) => a.name.localeCompare(b.name, 'cs'));
+const group = GROUP_BY_KRAJ[k.name];
 const cats = CATEGORIES.map((c) => ({ ...c, n: clinics.filter((x) => x.categories.includes(c.slug)).length })).filter((c) => c.n > 0);
 ---
 <Layout
@@ -25,6 +27,12 @@ const cats = CATEGORIES.map((c) => ({ ...c, n: clinics.filter((x) => x.categorie
     <div class="wrap">
       <h1>Zubaři {k.loc}</h1>
       <p class="lead">{k.count} {plural(k.count, 'zubní ordinace', 'zubní ordinace', 'zubních ordinací')}, klinik a dentálních hygien v {k.cities.length} {plural(k.cities.length, 'městě nebo obci', 'městech a obcích', 'městech a obcích')}. Vyberte město, nebo <a href={`/hledat?kraj=${k.slug}`}>hledejte podle jména, oboru a pojišťovny</a>.</p>
+      {group && (
+        <a class="fbgroup" href={group.url} target="_blank" rel="noopener">
+          <span><strong>Facebooková skupina {group.name}</strong><br /><span class="small muted">Lidé z kraje si v ní radí, kdo bere nové pacienty.{group.members ? ` ${group.members} členů.` : ''}</span></span>
+          <span class="btn btn-ghost">Přidat se →</span>
+        </a>
+      )}
       <h2>Největší města</h2>
       <ul class="places">{top.map((c) => <li><a href={`/mesto/${c.slug}`}>{c.name}<span class="n">{c.count}</span></a></li>)}</ul>
       <nav class="subnav" aria-label="Obory" style="margin-top:20px">
@@ -57,6 +65,7 @@ const cats = CATEGORIES.map((c) => ({ ...c, n: clinics.filter((x) => x.categorie
   </section>
 </Layout>
 <style>
+  .fbgroup { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; padding: 14px 18px; border: 1px solid #b9dcd0; border-radius: 12px; background: #f1faf6; text-decoration: none; color: inherit; margin: 0 0 28px; }
   .subnav { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: baseline; font-size: 0.95rem; }
   .subnav a { text-decoration: none; font-weight: 550; }
 </style>

@@ -1,0 +1,29 @@
+---
+import Page from '../components/Page.astro';
+import { GROUPS } from '../lib/groups';
+const [main, ...rest] = GROUPS;
+---
+<Page title="Facebookové skupiny Hledám zubaře – všechny kraje" description="Skupiny Hledám zubaře na Facebooku: tisíce lidí si v nich každý den radí, kdo bere nové pacienty. Najděte skupinu pro svůj kraj." crumb="Facebookové skupiny">
+  <h1>Facebookové skupiny Hledám zubaře</h1>
+  <p class="lead">Web zubnikliniky.cz vyrostl z facebookových skupin, kde si lidé každý den radí, kdo bere nové pacienty. Přidejte se do skupiny svého kraje. Můžete se zeptat, poradit ostatním nebo zjistit, kde se právě uvolnilo místo.</p>
+  <a class="panel group-main" href={main.url} target="_blank" rel="noopener">
+    <span class="small muted">Největší komunita kolem zubařů v Česku</span>
+    <strong>{main.name}</strong>
+    <span>{main.members} členů · {main.kraj}</span>
+    <span class="btn">Přidat se do skupiny →</span>
+  </a>
+  <h2>Skupiny v dalších krajích</h2>
+  <ul class="groups">
+    {rest.map((g) => <li><a href={g.url} target="_blank" rel="noopener"><strong>{g.name}</strong><span class="small muted">{g.kraj}</span></a></li>)}
+  </ul>
+  <p class="small muted" style="margin-top:24px">Skupinu pro svůj kraj nevidíte? Zatím ji nemám. Přidejte se do nejbližší, nebo hledejte přímo v <a href="/mesta">přehledu ordinací podle krajů</a>.</p>
+</Page>
+<style>
+  .group-main { display: grid; gap: 6px; text-decoration: none; color: inherit; margin: 24px 0 36px; border-color: #b9dcd0; background: linear-gradient(135deg, #f1faf6, #fff); }
+  .group-main strong { font-size: 1.35rem; }
+  .group-main .btn { justify-self: start; margin-top: 8px; }
+  .groups { list-style: none; padding: 0; display: grid; gap: 10px; }
+  @media (min-width: 640px) { .groups { grid-template-columns: 1fr 1fr; } }
+  .groups a { display: grid; gap: 2px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px; text-decoration: none; color: inherit; background: var(--surface); }
+  .groups a:hover { border-color: var(--brand); }
+</style>
