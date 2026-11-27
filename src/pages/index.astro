@@ -21,6 +21,8 @@ const ld = [{
   '@context': 'https://schema.org', '@type': 'WebSite', name: SITE.name, url: SITE.url, inLanguage: 'cs',
   potentialAction: { '@type': 'SearchAction', target: `${SITE.url}/hledat?q={search_term_string}`, 'query-input': 'required name=search_term_string' },
 }];
+import { getCollection } from 'astro:content';
+const posts = (await getCollection('poradna')).sort((a, b) => a.data.order - b.data.order);
 ---
 <Layout
   title="Zubaři, zubní kliniky a dentální hygiena v celé ČR – kdo bere nové pacienty"
@@ -125,6 +127,20 @@ const ld = [{
       </ul>
     </div>
   </section>
+
+  <section class="section">
+    <div class="wrap">
+      <h2>Poradna pro pacienty</h2>
+      <ul class="tips">
+        {posts.map((p) => <li><a href={`/poradna/${p.id}`}><strong>{p.data.h1}</strong><span class="muted small">{p.data.perex}</span></a></li>)}
+      </ul>
+    </div>
+  </section>
+  <style>
+    .tips { list-style: none; padding: 0; margin: 16px 0 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+    .tips a { display: flex; flex-direction: column; gap: 6px; height: 100%; padding: 16px 18px; border: 1px solid var(--line); border-radius: 12px; background: #fff; text-decoration: none; color: var(--ink); }
+    .tips a:hover { border-color: var(--accent); }
+  </style>
 
   {reviews.length > 0 && (
     <section class="section">

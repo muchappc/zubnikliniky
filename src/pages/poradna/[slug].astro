@@ -1,0 +1,76 @@
+---
+import { getCollection, render } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import { SITE } from '../../lib/site';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('poradna');
+  return posts.map((p) => ({ params: { slug: p.id }, props: { post: p, all: posts } }));
+}
+const { post, all } = Astro.props;
+const { Content } = await render(post);
+const d = post.data;
+const url = new URL(`/poradna/${post.id}`, SITE.url).toString();
+const fmt = (x: Date) => x.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'long', year: 'numeric' });
+const related = all.filter((p) => p.id !== post.id).sort((a, b) => a.data.order - b.data.order);
+const ld: object[] = [{
+  '@context': 'https://schema.org', '@type': 'Article', headline: d.h1, description: d.description,
+  datePublished: d.published.toISOString().slice(0, 10), dateModified: d.updated.toISOString().slice(0, 10),
+  mainEntityOfPage: url, inLanguage: 'cs',
+  author: { '@type': 'Organization', name: SITE.name, url: SITE.url },
+  publisher: { '@type': 'Organization', name: SITE.name, url: SITE.url, logo: { '@type': 'ImageObject', url: new URL('/logo.png', SITE.url).toString() } },
+}];
+if (d.faq.length) ld.push({ '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: d.faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) });
+---
+<Layout title={d.title} description={d.description} ogType="article" jsonLd={ld}>
+  <Breadcrumbs items={[{ name: 'Poradna', href: '/poradna' }, { name: d.h1 }]} />
+  <article class="section" style="padding-top:20px">
+    <div class="wrap prose article">
+      <h1>{d.h1}</h1>
+      <p class="lead">{d.perex}</p>
+      <p class="small muted">Aktualizováno {fmt(d.updated)}</p>
+      <Content />
+
+      <aside class="cta">
+        <strong>Hledáte zubaře, který bere nové pacienty?</strong>
+        <p>Projděte ordinace ve svém okolí – u každé je vidět, jestli podle posledních informací přijímá, a na jaké pojišťovny má smlouvu.</p>
+        <a class="btn" href="/mesta">Najít zubaře podle města</a>
+      </aside>
+
+      {d.faq.length > 0 && (
+        <section class="afaq">
+          <h2>Časté otázky</h2>
+          {d.faq.map((f) => (<details><summary>{f.q}</summary><p>{f.a}</p></details>))}
+        </section>
+      )}
+
+      {d.sources.length > 0 && (
+        <section class="sources">
+          <h2>Zdroje</h2>
+          <ul>{d.sources.map((s) => <li><a href={s.url} rel="noopener" target="_blank">{s.title}</a></li>)}</ul>
+          <p class="small muted">Článek má informativní charakter a nenahrazuje radu lékaře ani vaší zdravotní pojišťovny. Pravidla úhrad se mění, aktuální podmínky si vždy ověřte u své pojišťovny.</p>
+        </section>
+      )}
+
+      <section class="related">
+        <h2>Další články v poradně</h2>
+        <ul>{related.map((p) => <li><a href={`/poradna/${p.id}`}>{p.data.h1}</a></li>)}</ul>
+      </section>
+    </div>
+  </article>
+</Layout>
+<style>
+  .article { max-width: 760px; }
+  .article :global(table) { border-collapse: collapse; width: 100%; margin: 16px 0; font-size: .95rem; }
+  .article :global(th), .article :global(td) { border: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+  .article :global(th) { background: var(--brand-soft); }
+  .article :global(ol) { padding-left: 1.3em; max-width: 68ch; }
+  .article :global(ol li) { margin-bottom: .5em; }
+  .cta { background: var(--brand-soft); border: 1px solid #bfe9ea; border-radius: 14px; padding: 20px 22px; margin: 32px 0; }
+  .cta p { margin: 6px 0 14px; }
+  .afaq details { border-bottom: 1px solid var(--line); padding: 12px 0; }
+  .afaq summary { cursor: pointer; font-weight: 600; }
+  .afaq details p { margin: 8px 0 0; }
+  .sources li, .related li { margin-bottom: .35em; }
+</style>

@@ -1,0 +1,38 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import { SITE } from '../../lib/site';
+const posts = (await getCollection('poradna')).sort((a, b) => a.data.order - b.data.order);
+const ld = {
+  '@context': 'https://schema.org', '@type': 'CollectionPage', name: 'Poradna – jak sehnat zubaře a co hradí pojišťovna',
+  url: new URL('/poradna', SITE.url).toString(),
+  hasPart: posts.map((p) => ({ '@type': 'Article', headline: p.data.h1, url: new URL(`/poradna/${p.id}`, SITE.url).toString() })),
+};
+---
+<Layout title="Poradna: jak sehnat zubaře, pohotovost a co hradí pojišťovna" description="Praktické návody pro pacienty: jak najít zubaře, který bere nové pacienty, co dělat, když vás odmítají, jak funguje zubní pohotovost a co v roce 2026 hradí pojišťovna." jsonLd={[ld]}>
+  <Breadcrumbs items={[{ name: 'Poradna' }]} />
+  <section class="section" style="padding-top:20px">
+    <div class="wrap">
+      <h1>Poradna pro pacienty</h1>
+      <p class="lead" style="max-width:62ch">Návody, které vznikly z otázek, jež lidé každý den řeší ve facebookových skupinách Hledám zubaře.</p>
+      <div class="posts">
+        {posts.map((p) => (
+          <a class="post" href={`/poradna/${p.id}`}>
+            <h2>{p.data.h1}</h2>
+            <p>{p.data.perex}</p>
+            <span class="more">Číst článek →</span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+</Layout>
+<style>
+  .posts { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; margin-top: 24px; }
+  .post { display: block; background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 22px; text-decoration: none; color: inherit; transition: border-color .15s, box-shadow .15s; }
+  .post:hover { border-color: var(--accent); box-shadow: 0 6px 20px rgba(0,190,193,.12); }
+  .post h2 { font-size: 1.15rem; margin: 0 0 8px; color: var(--ink); }
+  .post p { margin: 0 0 12px; color: #3d5a60; font-size: .95rem; }
+  .post .more { color: var(--accent-ink); font-weight: 600; font-size: .92rem; }
+</style>

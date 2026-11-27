@@ -29,7 +29,7 @@ const faqs: { q: string; a: string }[] = [
   },
   {
     q: `Co dělat, když ${loc} žádný zubař nebere nové pacienty?`,
-    a: `Obraťte se na svou zdravotní pojišťovnu. Pojišťovna musí svým pojištěncům zajistit dostupnou péči a na požádání vám pomůže najít smluvního zubaře. Zkuste i ordinace v okolních obcích a dentální hygienu, která často nové klienty přijímá.`,
+    a: `Obraťte se na svou zdravotní pojišťovnu. Pojišťovna musí svým pojištěncům zajistit dostupnou péči a na požádání vám pomůže najít smluvního zubaře. Zkuste i ordinace v okolních obcích. Podrobný postup je v poradně v článku Zubař vás nechce zaregistrovat? Pojišťovna vám ho musí zajistit.`,
   },
   {
     q: `Jak zjistím, na jaké pojišťovny má zubař smlouvu?`,
@@ -48,6 +48,7 @@ const ld = { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: f
       </details>
     ))}
     {href && <p class="small muted" style="margin-top:14px"><a href={href}>Hledat zubaře {loc} podle oboru a pojišťovny</a></p>}
+    <p class="small" style="margin-top:10px">Poradna: <a href="/poradna/jak-najit-zubare">Jak najít zubaře</a> · <a href="/poradna/zubar-odmita-nove-pacienty">Když vás zubaři odmítají</a> · <a href="/poradna/co-hradi-pojistovna-u-zubare">Co hradí pojišťovna</a> · <a href="/poradna/zubni-pohotovost">Zubní pohotovost</a></p>
   </div>
   <script type="application/ld+json" set:html={JSON.stringify(ld)} />
 </section>
