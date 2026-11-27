@@ -3,6 +3,7 @@ export interface Group { name: string; url: string; kraj: string; members?: stri
 export const GROUPS: Group[] = [
   { name: 'Hledám zubaře Ostrava a okolí', url: 'https://www.facebook.com/groups/hledamzubare', kraj: 'Moravskoslezský kraj', members: 'přes 34 000' },
   { name: 'Hledám Zubaře Praha', url: 'https://www.facebook.com/groups/2409787336006478', kraj: 'Hlavní město Praha' },
+  { name: 'Hledám zubaře ve Středočeském kraji', url: 'https://www.facebook.com/groups/1178499447649939', kraj: 'Středočeský kraj' },
   { name: 'Hledám zubaře v Jihomoravském kraji', url: 'https://www.facebook.com/groups/1042938844698926', kraj: 'Jihomoravský kraj' },
   { name: 'Hledám zubaře v Plzeňském kraji', url: 'https://www.facebook.com/groups/715279431427040', kraj: 'Plzeňský kraj' },
   { name: 'Hledám zubaře v Ústeckém kraji', url: 'https://www.facebook.com/groups/1929179894514353', kraj: 'Ústecký kraj' },
