@@ -25,16 +25,16 @@ const area = `${line} L${cx(cum.length - 1).toFixed(1)} ${CH - cPadB} L${cx(0).t
   <figcaption>
     <strong>Poptávky přibývaly každý den</strong>
     <span class="legend">
-      <span><i style="background:#0b6f70"></i>Vstupní prohlídka</span>
+      <span><i style="background:#034758"></i>Vstupní prohlídka</span>
       <span><i style="background:#7cc4b5"></i>Dentální hygiena</span>
     </span>
   </figcaption>
 
   <svg viewBox={`0 0 ${W} ${CH}`} class="cum" role="img" aria-label={`Kumulativní počet poptávek, celkem ${total} za ${days.length} dní`}>
     <path d={area} fill="#e3f1f0" />
-    <path d={line} fill="none" stroke="#0b6f70" stroke-width="2.5" stroke-linejoin="round" />
-    <circle cx={cx(cum.length - 1)} cy={cy(total)} r="5" fill="#0b6f70" />
-    <text x={cx(cum.length - 1) - 4} y={cy(total) - 10} text-anchor="end" font-size="13" font-weight="700" fill="#0f2e35">{total} poptávek celkem</text>
+    <path d={line} fill="none" stroke="#034758" stroke-width="2.5" stroke-linejoin="round" />
+    <circle cx={cx(cum.length - 1)} cy={cy(total)} r="5" fill="#034758" />
+    <text x={cx(cum.length - 1) - 4} y={cy(total) - 10} text-anchor="end" font-size="13" font-weight="700" fill="#06303b">{total} poptávek celkem</text>
     <text x={padL} y="12" font-size="11" fill="#7b8f94">Součet od spuštění</text>
   </svg>
 
@@ -52,7 +52,7 @@ const area = `${line} L${cx(cum.length - 1).toFixed(1)} ${CH - cPadB} L${cx(0).t
       return (
         <g>
           <title>{`${d.day}. ${month}.: ${d.entry} vstupní prohlídka, ${d.hygiene} hygiena`}</title>
-          {d.entry > 0 && <rect x={x} y={base - hE} width={barW} height={hE} rx="3" fill="#0b6f70" />}
+          {d.entry > 0 && <rect x={x} y={base - hE} width={barW} height={hE} rx="3" fill="#034758" />}
           {d.hygiene > 0 && <rect x={x} y={base - hE - hH - 2} width={barW} height={hH} rx="3" fill="#7cc4b5" />}
           {(i % 3 === 0 || i === days.length - 1) && <text x={x + barW / 2} y={H - 12} text-anchor="middle" font-size="11" fill="#7b8f94">{`${d.day}. ${month}.`}</text>}
         </g>
