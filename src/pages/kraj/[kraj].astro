@@ -17,7 +17,7 @@ const premium = clinics.filter((c) => c.premium && !accepting.includes(c)).slice
 const top = k.cities.slice(0, 24);
 const alpha = [...k.cities].sort((a, b) => a.name.localeCompare(b.name, 'cs'));
 const group = GROUP_BY_KRAJ[k.name];
-const cats = CATEGORIES.map((c) => ({ ...c, n: clinics.filter((x) => x.categories.includes(c.slug)).length })).filter((c) => c.n > 0);
+const cats = CATEGORIES.map((c) => ({ ...c, n: clinics.filter((x) => x.categories.includes(c.slug)).length })).filter((c) => c.n >= 3);
 ---
 <Layout
   title={`Zubaři ${k.loc} – kdo bere nové pacienty`}

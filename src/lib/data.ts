@@ -184,7 +184,8 @@ export async function getParts(citySlug: string): Promise<Place[]> {
 
 export async function getCategoryCounts() {
   const all = await getClinics();
-  return CATEGORIES.map((cat) => ({ ...cat, count: all.filter((c) => c.categories.includes(cat.slug)).length })).filter((c) => c.count > 0);
+  // Obory s pár ordinacemi (např. implantologie, kterou registr nevede a doplňuje se ručně) zatím v přehledech neukazujeme.
+  return CATEGORIES.map((cat) => ({ ...cat, count: all.filter((c) => c.categories.includes(cat.slug)).length })).filter((c) => c.count >= 10);
 }
 
 function distKm(a: Clinic, b: Clinic) {
