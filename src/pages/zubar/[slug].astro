@@ -48,7 +48,7 @@ const ld: any = {
   ...(c.rating_count > 0 ? { aggregateRating: { '@type': 'AggregateRating', ratingValue: c.rating_avg, reviewCount: c.rating_count, bestRating: 5, worstRating: 1 } } : {}),
   ...(reviews.length ? { review: reviews.slice(0, 5).map((r) => ({ '@type': 'Review', author: { '@type': 'Person', name: r.author_name }, datePublished: r.created_at.slice(0, 10), reviewBody: r.text, reviewRating: { '@type': 'Rating', ratingValue: r.rating, bestRating: 5 } })) } : {}),
 };
-const desc = `${c.display_name} – ${mainCat?.name.toLowerCase() ?? 'zubní ordinace'} ${locative(c.city_part || c.city)}, ${c.street}. ${c.accepts_new === 'ano' ? 'Bere nové pacienty. ' : ''}Kontakt, pojišťovny a recenze pacientů.`;
+const desc = `${c.display_name} – ${mainCat?.name.toLowerCase() ?? 'zubní ordinace'} ${locative(c.city_part || c.city)}, ${c.street}. ${c.accepts_new === 'ano' ? 'Bere nové pacienty. ' : ''}Zjistěte, jestli bere nové pacienty, na jaké pojišťovny, a pošlete poptávku. Recenze pacientů.`;
 ---
 <Layout title={`${c.display_name} – ${mainCat?.name ?? 'Zubní ordinace'} ${c.city}`} description={desc} jsonLd={[ld]} ogType="profile" image={c.photos[0]}>
   <Breadcrumbs items={crumbs} />

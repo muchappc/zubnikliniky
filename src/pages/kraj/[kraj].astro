@@ -5,6 +5,7 @@ import ClinicRow from '../../components/ClinicRow.astro';
 import { getKraje, type Kraj } from '../../lib/data';
 import { CATEGORIES, plural } from '../../lib/taxonomy.mjs';
 import { GROUP_BY_KRAJ } from '../../lib/groups';
+import Faq from '../../components/Faq.astro';
 
 export async function getStaticPaths() {
   const kraje = await getKraje();
@@ -57,6 +58,7 @@ const cats = CATEGORIES.map((c) => ({ ...c, n: clinics.filter((x) => x.categorie
       </div>
     </section>
   )}
+  <Faq name={k.name} loc={k.loc} list={clinics} kraj={k.name} href={`/hledat?kraj=${k.slug}`} />
   <section class="section">
     <div class="wrap">
       <h2>Další kraje</h2>

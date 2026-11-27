@@ -1,0 +1,58 @@
+---
+// Časté otázky k městu nebo kraji – viditelný obsah + FAQPage pro vyhledávače a AI odpovědi.
+import type { Clinic } from '../lib/data';
+import { plural } from '../lib/taxonomy.mjs';
+import { GROUP_BY_KRAJ } from '../lib/groups';
+interface Props { name: string; loc: string; list: Clinic[]; kraj?: string; href?: string }
+const { name, loc, list, kraj, href } = Astro.props;
+const n = list.length;
+const count = (s: string) => list.filter((c) => c.categories.includes(s)).length;
+const zub = count('zubar'), hyg = count('dentalni-hygiena'), orto = count('ortodoncie'), chir = count('chirurgie');
+const yes = list.filter((c) => c.accepts_new === 'ano');
+const group = kraj ? GROUP_BY_KRAJ[kraj] : undefined;
+const parts = [
+  zub && `${zub} ${plural(zub, 'zubního lékaře', 'zubní lékaře', 'zubních lékařů')}`,
+  hyg && `${hyg} ${plural(hyg, 'dentální hygienu', 'dentální hygieny', 'dentálních hygien')}`,
+  orto && `${orto} ${plural(orto, 'ortodontistu', 'ortodontisty', 'ortodontistů')}`,
+  chir && `${chir} ${plural(chir, 'pracoviště', 'pracoviště', 'pracovišť')} zubní a orální chirurgie`,
+].filter(Boolean);
+const faqs: { q: string; a: string }[] = [
+  {
+    q: `Kolik zubařů je ${loc}?`,
+    a: `${loc[0].toUpperCase() + loc.slice(1)} je podle Národního registru poskytovatelů zdravotních služeb ${n} ${plural(n, 'zubní pracoviště', 'zubní pracoviště', 'zubních pracovišť')}${parts.length ? `: ${parts.join(', ')}` : ''}. Seznam se každý měsíc aktualizuje.`,
+  },
+  {
+    q: `Který zubař ${loc} bere nové pacienty?`,
+    a: yes.length
+      ? `Podle posledních ověřených informací berou nové pacienty: ${yes.slice(0, 8).map((c) => c.display_name).join(', ')}${yes.length > 8 ? ' a další' : ''}. U každé ordinace je uvedeno, kdy byl údaj naposledy ověřen.`
+      : `Ověřenou informaci zatím nemám u žádné ordinace. Pošlete poptávku přes profil vybrané ordinace a já ji ordinaci předám${group ? `, nebo se zeptejte ve facebookové skupině ${group.name}, kde si lidé každý den radí, kdo bere nové pacienty` : ''}.`,
+  },
+  {
+    q: `Co dělat, když ${loc} žádný zubař nebere nové pacienty?`,
+    a: `Obraťte se na svou zdravotní pojišťovnu. Pojišťovna musí svým pojištěncům zajistit dostupnou péči a na požádání vám pomůže najít smluvního zubaře. Zkuste i ordinace v okolních obcích a dentální hygienu, která často nové klienty přijímá.`,
+  },
+  {
+    q: `Jak zjistím, na jaké pojišťovny má zubař smlouvu?`,
+    a: `Pokud je to ověřené, najdete smluvní pojišťovny přímo v profilu ordinace. Jinak se na ně zeptejte při objednání. Vyhledávání na zubnikliniky.cz umí filtrovat i podle pojišťovny (VZP, VoZP, ČPZP, OZP, ZPŠ, ZPMV, RBP).`,
+  },
+];
+const ld = { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) };
+---
+<section class="section faq">
+  <div class="wrap">
+    <h2>Časté otázky – zubaři {loc}</h2>
+    {faqs.map((f) => (
+      <details>
+        <summary>{f.q}</summary>
+        <p>{f.a}</p>
+      </details>
+    ))}
+    {href && <p class="small muted" style="margin-top:14px"><a href={href}>Hledat zubaře {loc} podle oboru a pojišťovny</a></p>}
+  </div>
+  <script type="application/ld+json" set:html={JSON.stringify(ld)} />
+</section>
+<style>
+  .faq details { border-bottom: 1px solid var(--line); padding: 14px 0; }
+  .faq summary { cursor: pointer; font-weight: 600; font-size: 1.02rem; }
+  .faq details p { margin: 10px 0 0; max-width: 70ch; }
+</style>

@@ -5,6 +5,7 @@ import ClinicList from '../../../components/ClinicList.astro';
 import { getCities, getParts, type Place } from '../../../lib/data';
 import { CATEGORIES, locative, plural, KRAJ_BY_NAME } from '../../../lib/taxonomy.mjs';
 import { summary } from '../../../lib/text';
+import Faq from '../../../components/Faq.astro';
 
 export async function getStaticPaths() {
   const cities = await getCities();
@@ -37,6 +38,7 @@ const catLinks = CATEGORIES.map((c) => ({ ...c, n: city.clinics.filter((x) => x.
       <ClinicList clinics={city.clinics} parts={parts} />
     </div>
   </section>
+  <Faq name={city.name} loc={loc} list={city.clinics} kraj={city.kraj} href={`/hledat?mesto=${city.slug}`} />
   {others.length > 0 && (
     <section class="section">
       <div class="wrap">
