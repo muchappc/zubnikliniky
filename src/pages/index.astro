@@ -144,17 +144,23 @@ const ld = [{
   )}
 
   <section class="section">
-    <div class="wrap how">
-      <div>
-        <h2>Odkud jsou údaje</h2>
-        <p>Seznam ordinací vychází z Národního registru poskytovatelů zdravotních služeb a každý měsíc se aktualizuje. Kdo bere nové pacienty a na jaké pojišťovny, registr neuvádí. Tyto údaje doplňuji od pacientů a přímo od ordinací a u každého je vidět, kdy byl naposledy ověřen.</p>
-        <p>Web navazuje na facebookové skupiny <strong>Hledám zubaře</strong>. Ta ostravská má přes 34 000 členů a je největší komunitou kolem zubařů v Česku. Lidé si v nich každý den radí, kdo bere nové pacienty. <a href="/skupiny">Najděte skupinu pro svůj kraj →</a></p>
-        <p><a href="/o-nas">Jak web funguje a jak řadíme ordinace</a></p>
-      </div>
-      <div class="note">
-        <h3>Máte ordinaci?</h3>
-        <p>Doplňte zdarma, jestli berete nové pacienty, pojišťovny a ordinační hodiny. Pacienti vás pak najdou přesně ve chvíli, kdy zubaře hledají.</p>
-        <a class="btn" href="/pro-zubare">Upravit údaje ordinace</a>
+    <div class="wrap">
+      <div class="owner">
+        <div>
+          <p class="eyebrow">Pro zubaře a dentální hygienistky</p>
+          <h2>Máte ordinaci?</h2>
+          <p class="lead">Pacienti tu hledají zubaře přesně ve chvíli, kdy ho potřebují. Dejte jim vědět, jestli berete nové pacienty.</p>
+          <ul class="owner-list">
+            <li><strong>Zdarma:</strong> doplňte, jestli berete nové pacienty, smluvní pojišťovny a ordinační hodiny. Poptávky pacientů vám předám.</li>
+            <li><strong>Prémiový profil:</strong> telefon, e-mail a odkaz na váš web přímo v profilu, popis, fotky ordinace a poptávky rovnou do vašeho e-mailu.</li>
+            <li><strong>Marketing:</strong> potřebujete víc nových pacientů? Pomůžu vám s reklamou na Facebooku, Instagramu a Googlu.</li>
+          </ul>
+        </div>
+        <div class="owner-cta">
+          <a class="btn" href="/pro-zubare#formular">Upravit údaje zdarma</a>
+          <a class="btn btn-ghost" href="/pro-zubare#objednat">Prémiový profil od {SITE.premiumPrice}</a>
+          <a class="btn btn-ghost" href="/pro-zubare/pripadova-studie">Případová studie kampaně</a>
+        </div>
       </div>
     </div>
   </section>
@@ -187,8 +193,12 @@ const ld = [{
   .cats p { margin: 4px 0 12px; }
   .reviews-mini { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); }
   .reviews-mini p { margin-bottom: 8px; }
-  .how { display: grid; gap: 28px; }
-  @media (min-width: 900px) { .how { grid-template-columns: 1.4fr 1fr; align-items: start; } }
+  .owner { display: grid; gap: 28px; padding: 32px; border: 1px solid #b9dcd0; border-radius: var(--radius-m, 14px); background: linear-gradient(135deg, #f1faf6, #fff); }
+  @media (min-width: 900px) { .owner { grid-template-columns: 1.6fr 1fr; align-items: center; padding: 40px 44px; } }
+  .owner .eyebrow { text-transform: uppercase; letter-spacing: .06em; font-weight: 650; font-size: .8rem; color: var(--brand); margin: 0 0 6px; }
+  .owner-list { margin: 18px 0 0; padding-left: 1.1em; display: grid; gap: 10px; }
+  .owner-cta { display: grid; gap: 10px; }
+  .owner-cta .btn { text-align: center; }
 </style>
 
 <script>
