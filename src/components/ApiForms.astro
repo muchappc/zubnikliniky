@@ -21,6 +21,8 @@
         const res = await fetch(form.dataset.api!, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(data) });
         const out = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(out.error || 'Odeslání se nepovedlo. Zkuste to prosím znovu za chvíli.');
+        const EV: Record<string, string> = { '/api/inquiry': 'generate_lead', '/api/checkout': 'begin_checkout', '/api/claim': 'clinic_claim', '/api/marketing': 'marketing_lead', '/api/review': 'review_submit', '/api/report': 'report_submit' };
+        (window as any).zkTrack?.(EV[form.dataset.api!] || 'form_submit', { page_path: location.pathname });
         if (out.url) { msg.dataset.kind = 'ok'; msg.textContent = 'Přesměrovávám na platební bránu…'; msg.hidden = false; location.href = out.url; return; }
         msg.dataset.kind = 'ok';
         msg.textContent = out.message || form.dataset.ok || 'Odesláno.';

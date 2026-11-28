@@ -35,6 +35,7 @@ const year = new Date().getFullYear();
           <li><a href="/kontakt">Kontakt</a></li>
           <li><a href="/podminky">Podmínky použití</a></li>
           <li><a href="/soukromi">Ochrana osobních údajů</a></li>
+          {import.meta.env.PUBLIC_GA_ID && <li><a href="/soukromi#cookies" data-consent-open>Nastavení cookies</a></li>}
         </ul>
       </div>
     </div>

@@ -14,10 +14,16 @@ import { SITE } from '../lib/site';
   </ul>
   <h2>Údaje o lékařích a ordinacích</h2>
   <p>Jména lékařů a údaje o ordinacích přebíráme z veřejného Národního registru poskytovatelů zdravotních služeb. Pokud jste lékař a chcete údaje upravit nebo vznést námitku, napište nám.</p>
-  <h2>Cookies a měření návštěvnosti</h2>
-  <p>Web nepoužívá reklamní ani analytické cookies. Návštěvnost měříme službou Vercel Web Analytics, která funguje bez cookies a neukládá IP adresy ani nic, co by umožnilo poznat konkrétního návštěvníka. Počty zobrazení profilů a kliknutí na kontakty ordinací sčítáme anonymně po dnech, také bez cookies a bez ukládání IP adres.</p>
+  <h2 id="cookies">Cookies a měření návštěvnosti</h2>
+  <p>Web nepoužívá reklamní cookies. Základní návštěvnost měříme službou Vercel Web Analytics, která funguje bez cookies a neukládá IP adresy ani nic, co by umožnilo poznat konkrétního návštěvníka. Počty zobrazení profilů a kliknutí na kontakty ordinací sčítáme anonymně po dnech, také bez cookies a bez ukládání IP adres.</p>
+  {import.meta.env.PUBLIC_GA_ID && (
+    <>
+      <p><strong>Google Analytics</strong> (Google Ireland Ltd.) používáme jen tehdy, když k tomu v liště dáte souhlas. Ukládá analytické cookies (<code>_ga</code>, <code>_ga_*</code>) na dobu až 14 měsíců a slouží ke zjištění, které stránky jsou užitečné, odkud návštěvníci přicházejí a kolik z nich odešle poptávku. Reklamní funkce a sdílení dat pro reklamu jsou vypnuté. Údaje mohou být předány do USA v rámci rámce EU–USA pro ochranu osobních údajů. Právní základ: váš souhlas, který můžete kdykoli odvolat.</p>
+      <p><a href="#cookies" data-consent-open>Změnit nastavení cookies</a></p>
+    </>
+  )}
   <h2>Zpracovatelé</h2>
-  <p>Hosting webu: Vercel Inc. Databáze: Supabase (servery v EU). Odesílání e-mailů: Resend. Se všemi máme uzavřené smlouvy o zpracování osobních údajů v rámci jejich obchodních podmínek.</p>
+  <p>Hosting webu: Vercel Inc. Databáze: Supabase (servery v EU). Odesílání e-mailů: Resend. Platby předplatného: Stripe.{import.meta.env.PUBLIC_GA_ID && ' Měření návštěvnosti se souhlasem: Google Analytics.'} Se všemi máme uzavřené smlouvy o zpracování osobních údajů v rámci jejich obchodních podmínek.</p>
   <h2>Vaše práva</h2>
   <p>Máte právo na přístup ke svým údajům, jejich opravu, výmaz, omezení zpracování, přenositelnost a vznést námitku. Souhlas můžete kdykoli odvolat. Stížnost můžete podat u Úřadu pro ochranu osobních údajů (uoou.gov.cz).</p>
 </Page>

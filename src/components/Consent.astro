@@ -1,0 +1,66 @@
+---
+// Google Analytics 4 jen se souhlasem návštěvníka (bez souhlasu se GA vůbec nenačte).
+// ID měření se bere z PUBLIC_GA_ID; když není nastavené, komponenta nic nevykreslí.
+const GA_ID = import.meta.env.PUBLIC_GA_ID as string | undefined;
+---
+{GA_ID && (
+  <>
+    <div class="consent" id="consent" hidden role="dialog" aria-live="polite" aria-label="Souhlas s cookies">
+      <p>Rád bych věděl, které stránky vám pomáhají, a podle toho web zlepšoval. Smím k tomu použít analytické cookies Google Analytics? <a href="/soukromi#cookies">Více informací</a></p>
+      <div class="consent-btns">
+        <button type="button" class="btn btn-ghost" data-consent="denied">Odmítnout</button>
+        <button type="button" class="btn" data-consent="granted">Povolit</button>
+      </div>
+    </div>
+    <script is:inline define:vars={{ GA_ID }}>
+      (function () {
+        var KEY = 'zk_consent';
+        var box = document.getElementById('consent');
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function () { window.dataLayer.push(arguments); };
+        var loaded = false;
+        function load() {
+          if (loaded) return; loaded = true;
+          gtag('consent', 'default', { ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied', analytics_storage: 'granted' });
+          var s = document.createElement('script');
+          s.async = true; s.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_ID;
+          document.head.appendChild(s);
+          gtag('js', new Date());
+          gtag('config', GA_ID, { anonymize_ip: true });
+        }
+        function get() { try { return localStorage.getItem(KEY); } catch (e) { return null; } }
+        function set(v) { try { localStorage.setItem(KEY, v); } catch (e) {} }
+        function clearGa() {
+          document.cookie.split(';').forEach(function (c) {
+            var n = c.split('=')[0].trim();
+            if (/^_ga/.test(n)) ['', '.' + location.hostname.replace(/^www\./, ''), location.hostname].forEach(function (d) {
+              document.cookie = n + '=; Max-Age=0; path=/' + (d ? '; domain=' + d : '');
+            });
+          });
+        }
+        // Měření událostí: volá se z formulářů a odkazů; bez souhlasu nic neodejde.
+        window.zkTrack = function (name, params) { if (loaded) gtag('event', name, params || {}); };
+        var v = get();
+        if (v === 'granted') load(); else if (!v) box.hidden = false;
+        box.addEventListener('click', function (e) {
+          var b = e.target.closest('[data-consent]'); if (!b) return;
+          var val = b.getAttribute('data-consent'); set(val); box.hidden = true;
+          if (val === 'granted') load(); else clearGa();
+        });
+        document.addEventListener('click', function (e) {
+          var open = e.target.closest('[data-consent-open]');
+          if (open) { e.preventDefault(); box.hidden = false; return; }
+          var t = e.target.closest('[data-track]');
+          if (t) window.zkTrack('contact_click', { method: t.getAttribute('data-track'), page_path: location.pathname });
+        });
+      })();
+    </script>
+  </>
+)}
+<style>
+  .consent { position: fixed; left: 16px; right: 16px; bottom: 16px; z-index: 50; max-width: 620px; margin: 0 auto; background: #fff; border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 10px 30px rgba(6,48,59,.18); padding: 16px 18px; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+  .consent[hidden] { display: none; }
+  .consent p { margin: 0; flex: 1 1 300px; font-size: .92rem; }
+  .consent-btns { display: flex; gap: 8px; }
+  .consent .btn { padding: 8px 16px; font-size: .92rem; }
+</style>

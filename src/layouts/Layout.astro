@@ -4,6 +4,7 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import { SITE } from '../lib/site';
 import Analytics from '@vercel/analytics/astro';
+import Consent from '../components/Consent.astro';
 
 interface Props {
   title: string;
@@ -51,5 +52,6 @@ const ogImage = image ?? new URL('/og.png', SITE.url).toString();
     <main id="obsah"><slot /></main>
     <Footer />
     <Analytics />
+    <Consent />
   </body>
 </html>
